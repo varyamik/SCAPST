@@ -301,8 +301,8 @@ def plotting_diagramms(a, x, y, xval, yval):
 
 
 def plot_cluster_diagrams(df_sel, df, radius_am, l_med, b_med):
-    bg_color = "#AEC0FC"
-    fig1 = plt.figure(figsize=(8, 4), facecolor=bg_color, constrained_layout=True)
+    bg_color = 'None'#"#AEC0FC"
+    fig1 = plt.figure(figsize=(8, 4), facecolor=bg_color, dpi=300, constrained_layout=True)
     
     ax1 = fig1.add_subplot(1, 2, 1)
     if 'bp_rp' in df_sel.columns and len(df_sel) > 0:
@@ -321,7 +321,7 @@ def plot_cluster_diagrams(df_sel, df, radius_am, l_med, b_med):
         ax2.add_artist(ring)
         ax2.set_box_aspect(1)
 
-    fig2 = plt.figure(figsize=(8, 2), facecolor=bg_color, constrained_layout=True)
+    fig2 = plt.figure(figsize=(8, 2), facecolor=bg_color, dpi=300, constrained_layout=True)
     
     ax3 = fig2.add_subplot(1, 3, 1)
     if len(df_sel) > 0:
@@ -758,7 +758,7 @@ class ClusterAppUI:
                     else:
                         df_plot["Iteration"] = range(1, len(df_plot) + 1)
 
-                    fig_r, ax_r = plt.subplots(figsize=(6, 4), facecolor="#AEC0FC", constrained_layout=True)
+                    fig_r, ax_r = plt.subplots(figsize=(6, 4), facecolor='None', dpi=300, constrained_layout=True) #"#AEC0FC"
                     # График заполняется ТОЛЬКО точками без линий (используем ax_r.scatter)
                     ax_r.scatter(df_plot["Iteration"], df_plot["Number of stars"], color='black', s=50, zorder=3)
                     ax_r.set_xlabel("Iteration", fontsize=10)
