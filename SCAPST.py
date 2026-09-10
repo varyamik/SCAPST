@@ -799,9 +799,9 @@ class ClusterAppUI:
                     with col_dl:
                         csv_data = display_df.to_csv(index=False).encode('utf-8')
                         st.download_button(
-                            label="Save table to CSV",
+                            label="Save Table",
                             data=csv_data,
-                            file_name=f"{cluster_preset.split()[0]}_iterations_analysis.csv",
+                            file_name=f"{cluster_preset.split()[0]}_iterations_analysis.txt",
                             mime="text/csv",
                             key="save_csv_btn", use_container_width=True
                         )
