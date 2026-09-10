@@ -23,6 +23,16 @@ st.markdown("""
         color: #000000; 
     }
 
+    /* Перекрашиваем шапку в цвет фона приложения, чтобы она не выделялась белой полосой */
+    header.stAppHeader {
+        background-color: #CED9FD !important;
+        border: 1px solid #95A4D7 !important;
+    }
+    /* Скрываем кнопку Deploy */
+    .stDeployButton, [data-testid="stAppDeployButton"] {
+        display: none !important;
+    }
+    
     /* Отключаем эффект полупрозрачности/затемнения при пересчете */
     .stApp {
         opacity: 1 !important;
