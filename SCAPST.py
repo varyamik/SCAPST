@@ -710,6 +710,8 @@ class ClusterAppUI:
                 with st.container(border=True):
                     st.pyplot(res['fig1'], use_container_width=True)
                     st.pyplot(res['fig2'], use_container_width=True)
+                    plt.close(res['fig1'])
+                    plt.close(res['fig2'])
                 
             elif st.session_state.get("calculated", False) and st.session_state.get("results") is None:
                 st.warning("No data retrieved via ADQL.")
@@ -812,6 +814,7 @@ class ClusterAppUI:
                     ax_r.set_ylabel(r"Number of Cluster Stars", fontsize=10)
                     ax_r.grid(True, linestyle='--', alpha=0.6)
                     st.pyplot(fig_r, use_container_width=True)
+                    plt.close(fig_r)
                 else:
                     st.info("Graph will appear after the first calculation.")
 
