@@ -257,6 +257,12 @@ def fetch_gaia_data_adql(table_name,
                          plx_min, plx_max, 
                          radius_am, mag_limit, max_rows):
     
+    if max_rows == "Unlimited (it will take loooong...)":
+        top_str = "" 
+        st.warning(f"You chose \"Unlimited\". High risk of server timeout (Error 500) for dense sky regions.")
+    else:
+        top_str = f"TOP {max_rows}"
+        
     r_deg = radius_am * 3 / 60.0
     query = f"""
     SELECT TOP {max_rows} 
@@ -269,19 +275,42 @@ def fetch_gaia_data_adql(table_name,
     AND parallax BETWEEN {plx_min} and {plx_max}
     AND phot_g_mean_mag <= {mag_limit}
     """
+    # Создаем виджет прогресс-бара внутри функции
+    progress_bar = st.progress(0, text="Initializing query...")
+    
     try:
-        job = Gaia.launch_job_async(query)
-        df = job.get_results().to_pandas()
+        if max_rows == "Unlimited (it will take loooong...)":
+            Gaia.ROW_LIMIT = -1
+        else:
+            Gaia.ROW_LIMIT = int(max_rows)
+
+        # Шаг 1: Отправка асинхронной задачи на сервер Gaia
+        progress_bar.progress(25, text="Sending query to Gaia archive...")
+        job = Gaia.launch_job_async(query, dump_to_file=False)
         
+        # Шаг 2: Получение и скачивание результатов
+        progress_bar.progress(60, text="Downloading dataset from server...")
+        r = job.get_results()
+        
+        # Шаг 3: Конвертация в Pandas DataFrame
+        progress_bar.progress(85, text="Processing data into DataFrame...")
+        df = r.to_pandas()
+
         if 'bp_rp' not in df.columns or df['bp_rp'].isna().all():
             if 'phot_bp_mean_mag' in df.columns and 'phot_rp_mean_mag' in df.columns:
                 df['bp_rp'] = df['phot_bp_mean_mag'] - df['phot_rp_mean_mag']
             else:
                 df['bp_rp'] = 0.0
-
-        return df.dropna(subset=['parallax', 'pmra', 'pmdec', 'phot_g_mean_mag', 'l', 'b'])
+                
+        cleaned_df = df.dropna(subset=['parallax', 'pmra', 'pmdec', 'phot_g_mean_mag', 'l', 'b'])
+        
+        # Успешное завершение
+        progress_bar.progress(100, text=f"Done! Successfully loaded {len(cleaned_df):,} sources.")
+        return cleaned_df
+        
     except Exception as e:
-        st.error(f"ADQL Query Error: {e}")
+        progress_bar.empty() # Убираем прогресс-бар при ошибке
+        st.error(f"ADQL Query Error (Large dataset timeout/SSL): {e}")
         return None
 
 
@@ -429,7 +458,7 @@ class ClusterAppUI:
             with col2:
                 st.markdown(coord_display_html, unsafe_allow_html=True)
 
-            with st.form("cluster_params_form"):
+            with st.container(border=True):
                 st.markdown("##### Astrometric Parameters")
                 col1_f, col2_f, col3_f = st.columns(3)
                 with col1_f:
@@ -448,13 +477,12 @@ class ClusterAppUI:
                 with col_r2:
                     maglim = st.number_input("**Magnitude Limit**", value=def_mag)
                 with col_r3:
-                    max_rows = st.number_input("**Max Number of Sources**", value=50000, step=5000, min_value=5000, max_value=50000)
+                    max_rows = st.selectbox("**Max Number of Sources**", options=[25000, 50000, 100000, 500000, "Unlimited (it will take loooong... or you get time out in ESA)"])
 
-                gaia_release = st.selectbox("**Gaia Release**", [
-                    "Gaia DR3 (Gaia Collaboration, 2022), Ep=2016.0",
-                    "Gaia EDR3 (Gaia Collaboration, 2020), Ep=2016.0", 
-                    "Gaia DR2 (Gaia Collaboration, 2018), Ep=2015.5"
-                ])
+                gaia_release = st.selectbox("**Gaia Release**", ["Gaia DR3 (Gaia Collaboration, 2022), Ep=2016.0",
+                                                                 "Gaia EDR3 (Gaia Collaboration, 2020), Ep=2016.0", 
+                                                                 "Gaia DR2 (Gaia Collaboration, 2018), Ep=2015.5"
+                                                                 ])
                 selected_catalog_table = get_tap_table_name(gaia_release)
 
                 btn_col1, btn_col2 = st.columns(2)
