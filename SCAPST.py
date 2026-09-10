@@ -477,7 +477,7 @@ class ClusterAppUI:
                 with col_r2:
                     maglim = st.number_input("**Magnitude Limit**", value=def_mag)
                 with col_r3:
-                    max_rows = st.selectbox("**Max Number of Sources**", options=[25000, 50000, 100000, 500000, "Unlimited (it will take loooong... or you get time out in ESA)"])
+                    max_rows = st.selectbox("**Max Number of Sources**", options=[25000, 50000, 100000, 500000, "Unlimited (it will take loooong...)"])
 
                 gaia_release = st.selectbox("**Gaia Release**", ["Gaia DR3 (Gaia Collaboration, 2022), Ep=2016.0",
                                                                  "Gaia EDR3 (Gaia Collaboration, 2020), Ep=2016.0", 
