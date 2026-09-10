@@ -22,7 +22,16 @@ st.markdown("""
         background-color: #AEC0FC; 
         color: #000000; 
     }
-    
+
+    /* Отключаем эффект полупрозрачности/затемнения при пересчете */
+    .stApp {
+        opacity: 1 !important;
+    }
+    /* Скрываем плавающий индикатор загрузки в правом верхнем углу */
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+
     div.stSelectbox div[data-baseweb="select"] {
         background-color: #FFFFFF;     
         border-radius: 8px;            
