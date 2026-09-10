@@ -148,6 +148,21 @@ st.markdown("""
     div.st-key-save_csv_btn button:hover {
         background-color: #008240 !important;
     }
+
+    /* Кнопка Clear Table */
+    div.st-key-clear_btn button {
+        background-color: #A10051 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    div.st-key-clear_btn button p, 
+    div.st-key-clear_btn button span {
+        color: #FFFFFF !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+    }
+    div.st-key-clear_btn button:hover {
+        background-color: #820041 !important;
     </style>
 """, unsafe_allow_html=True)
 
@@ -766,7 +781,7 @@ class ClusterAppUI:
                     df_iterations = pd.DataFrame(history_list)
 
                     # Кнопка сортировки по ширине интервалов (сначала широкие, потом узкие)
-                    sort_btn_label = "Sort: wide ➔ narrow (intervals)" if st.session_state.get("sort_wide_to_narrow", False) else "Sort by Interval Width (wide ➔ narrow)"
+                    sort_btn_label = "Sort by Interval Width (wide ➔ narrow)" if st.session_state.get("sort_wide_to_narrow", False) else "Sort by Interval Width (wide ➔ narrow)"
                     if st.button(sort_btn_label, key="sort_intervals_btn"):
                         st.session_state["sort_wide_to_narrow"] = not st.session_state.get("sort_wide_to_narrow", False)
                         st.rerun()
@@ -788,10 +803,10 @@ class ClusterAppUI:
                             data=csv_data,
                             file_name=f"{cluster_preset.split()[0]}_iterations_analysis.csv",
                             mime="text/csv",
-                            key="save_csv_btn"
+                            key="save_csv_btn", use_container_width=True
                         )
                     with col_cl:
-                        if st.button("Clear History Table", key="clear_history_btn"):
+                        if st.button("Clear Table", key="clear_btn", use_container_width=True):
                             st.session_state["cluster_history"][cluster_preset] = []
                             st.rerun()
 
@@ -807,8 +822,7 @@ class ClusterAppUI:
                     else:
                         df_plot["Iteration"] = range(1, len(df_plot) + 1)
 
-                    fig_r, ax_r = plt.subplots(figsize=(6, 4), facecolor='None', dpi=300, constrained_layout=True) #"#AEC0FC"
-                    # График заполняется ТОЛЬКО точками без линий (используем ax_r.scatter)
+                    fig_r, ax_r = plt.subplots(figsize=(6, 4), facecolor='None', dpi=300, constrained_layout=True)
                     ax_r.scatter(df_plot["Iteration"], df_plot["Number of stars"], color='black', s=50, zorder=3)
                     ax_r.set_xlabel("Iteration", fontsize=10)
                     ax_r.set_ylabel(r"Number of Cluster Stars", fontsize=10)
