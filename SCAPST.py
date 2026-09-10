@@ -486,10 +486,10 @@ class ClusterAppUI:
                 selected_catalog_table = get_tap_table_name(gaia_release)
 
                 btn_col1, btn_col2 = st.columns(2)
-                with btn_col1:
-                    calc_clicked = st.form_submit_button("**Calculate**", type="primary", use_container_width=True, key="calc_btn")
-                with btn_col2:
-                    reset_clicked = st.form_submit_button("**Reset**", type="secondary", use_container_width=True, key="reset_btn")
+            with btn_col1:
+                calc_clicked = st.button("**Calculate**", type="primary", use_container_width=True, key="calc_btn")
+            with btn_col2:
+                reset_clicked = st.button("**Reset**", type="secondary", use_container_width=True, key="reset_btn")
 
             if reset_clicked:
                 st.cache_data.clear()
