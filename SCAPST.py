@@ -528,6 +528,7 @@ class ClusterAppUI:
             if reset_clicked:
                 st.cache_data.clear()
                 st.session_state.clear()
+                st.session_state["cluster_preset_widget"] = "NGC 6124 (example)"
                 st.session_state["reset_performed"] = True
                 st.rerun()
 
