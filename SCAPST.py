@@ -704,7 +704,7 @@ class ClusterAppUI:
                     dbg_col1, dbg_col2, dbg_col3, dbg_col4 = st.columns(4)
                     dbg_col1.markdown(f"""<div class="stat-card" style="min-height: 100px;">
                                          <div style="font-weight: normal; font-size: 14px; color: #000000; min-height: 50px; align-items: center;">
-                                         Number of stars in the inner circle
+                                         Total number of stars in the area
                                          </div><div style="font-size: 28px; font-weight: normal; color: #000000;">
                                             {res['tot_numb']:.0f}
                                          </div>
@@ -725,7 +725,7 @@ class ClusterAppUI:
                                          </div>""", unsafe_allow_html=True)
                     dbg_col4.markdown(f"""<div class="stat-card" style="min-height: 100px;">
                                          <div style="font-weight: normal; font-size: 14px; color: #000000; min-height: 50px; align-items: center;">
-                                         Nubmer of stars in the cluster, <br>background-adjusted
+                                         Nubmer of cluster stars, <br>background-adjusted
                                          </div><div style="font-size: 28px; font-weight: normal; color: #000000;">
                                             {res['cluster_n']:.0f}
                                          </div>
