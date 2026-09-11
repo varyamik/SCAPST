@@ -624,6 +624,7 @@ class ClusterAppUI:
                         (df['parallax'] >= p["plx_min"]) & (df['parallax'] <= p["plx_max"])
                     )
                     df_sel = df[mask]
+                    total_number_of_stars = len(df_sel['pmra'])
 
                     inarr_data = df_sel[['parallax', 'pmra', 'pmdec', 'phot_g_mean_mag']].to_numpy()
                     a_range = [p["pmra_min"], p["pmra_min"], p["pmra_max"], p["pmra_max"]]
@@ -658,7 +659,8 @@ class ClusterAppUI:
                         "fig2": fig2,
                         "n_circle": n_circle,
                         "n_ring": n_ring,
-                        "cluster_n": cluster_n
+                        "cluster_n": cluster_n,
+                        "tot_numb": total_number_of_stars
                     }
 
                     # Добавление строки в накопительную историю для текущего скопления
@@ -699,22 +701,29 @@ class ClusterAppUI:
                     st4.markdown(f"<div class='stat-card'><b> dist = {res['dist_mean']:.0f} pc </b></div>", unsafe_allow_html=True)
 
                 with st.container(border=True):
-                    dbg_col1, dbg_col2, dbg_col3 = st.columns(3)
+                    dbg_col1, dbg_col2, dbg_col3, dbg_col4 = st.columns(4)
                     dbg_col1.markdown(f"""<div class="stat-card" style="min-height: 100px;">
+                                         <div style="font-weight: normal; font-size: 14px; color: #000000; min-height: 50px; align-items: center;">
+                                         Number of stars in the inner circle
+                                         </div><div style="font-size: 28px; font-weight: normal; color: #000000;">
+                                            {res['tot_numb']:.0f}
+                                         </div>
+                                         </div>""", unsafe_allow_html=True)
+                    dbg_col2.markdown(f"""<div class="stat-card" style="min-height: 100px;">
                                          <div style="font-weight: normal; font-size: 14px; color: #000000; min-height: 50px; align-items: center;">
                                          Number of stars in the inner circle
                                          </div><div style="font-size: 28px; font-weight: normal; color: #000000;">
                                             {res['n_circle']:.0f}
                                          </div>
                                          </div>""", unsafe_allow_html=True)
-                    dbg_col2.markdown(f"""<div class="stat-card" style="min-height: 100px;">
+                    dbg_col3.markdown(f"""<div class="stat-card" style="min-height: 100px;">
                                          <div style="font-weight: normal; font-size: 14px; color: #000000; min-height: 50px; align-items: center;">
                                          Number of stars in the ring
                                          </div><div style="font-size: 28px; font-weight: normal; color: #000000;">
                                             {res['n_ring']:.0f}
                                          </div>
                                          </div>""", unsafe_allow_html=True)
-                    dbg_col3.markdown(f"""<div class="stat-card" style="min-height: 100px;">
+                    dbg_col4.markdown(f"""<div class="stat-card" style="min-height: 100px;">
                                          <div style="font-weight: normal; font-size: 14px; color: #000000; min-height: 50px; align-items: center;">
                                          Nubmer of stars in the cluster, <br>background-adjusted
                                          </div><div style="font-size: 28px; font-weight: normal; color: #000000;">
