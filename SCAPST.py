@@ -836,7 +836,7 @@ class ClusterAppUI:
                     ax_r.scatter(df_plot["Iteration"], df_plot["Number of stars"], color='black', s=50, zorder=3)
                     if cluster_preset == "NGC 6124 (example)":
                         ax_r.axvspan(4, 9, color='#FEBB81', alpha=0.5)
-                        ax_r.text(x=5, y=500, s='optimal intervals',horizontalalignment='left', fontsize=14)
+                        ax_r.text(x=(4-9)/2, y=500, s='optimal intervals',horizontalalignment='center', fontsize=14)
                     ax_r.set_xlabel("Iteration", fontsize=10)
                     ax_r.set_ylabel(r"Number of Cluster Stars", fontsize=10)
                     ax_r.grid(True, linestyle='--', alpha=0.6)
