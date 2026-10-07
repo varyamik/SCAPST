@@ -175,7 +175,7 @@ st.markdown("""
     <b>Short Guide:</b><br><br>
     This tool helps determine the optimal astrometric parameter ranges to separate a star cluster from Galactic field stars using Gaia data.<br><br>
     <b>First, use the left panel</b> (Select Parameters) to configure the astrometric intervals and collect statistics. By default, the application is loaded with the NGC 6124 cluster as an introductory example, but you can select any cluster from the Dias et al. (2021) catalog via the <b>Cluster</b> dropdown, and its parameters will load automatically. When setting up your initial parameters, it is strongly recommended to <b>start with the widest</b> possible intervals (<b>&plusmn3-5 mas/yr</b> for proper motion and <b>&plusmn0.5-0.8 mas</b> for parallax) and narrow them down gradually. This approach ensures correct performance during the statistical analysis stage and saves time, as expanding intervals triggers a re-query to the Gaia catalog.<br><br>
-    Once your statistics are gathered, you can proceed to the right panel (Search for Plateau & Completeness) to analyze the optimal parameter corridors.
+    Once your statistics are gathered, you can proceed to the right panel (Search for Plateau & Completeness) to analyze the optimal parameter intervals.
 </div>
 """, unsafe_allow_html=True)
 
@@ -834,6 +834,9 @@ class ClusterAppUI:
 
                     fig_r, ax_r = plt.subplots(figsize=(6, 4), facecolor='None', dpi=300, constrained_layout=True)
                     ax_r.scatter(df_plot["Iteration"], df_plot["Number of stars"], color='black', s=50, zorder=3)
+                    if ngc_key not in st.session_state["cluster_history"] and not st.session_state.get("reset_performed", False):
+                        ax_r.fill_betweenx(1500, 4, 9, color='#FEBB81', alpha=0.5)
+                        ax_r.text(x=5, y=500, text='optimal intervals',horizontalalignment='left', fontsize=14)
                     ax_r.set_xlabel("Iteration", fontsize=10)
                     ax_r.set_ylabel(r"Number of Cluster Stars", fontsize=10)
                     ax_r.grid(True, linestyle='--', alpha=0.6)
