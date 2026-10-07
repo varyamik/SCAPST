@@ -834,7 +834,7 @@ class ClusterAppUI:
 
                     fig_r, ax_r = plt.subplots(figsize=(6, 4), facecolor='None', dpi=300, constrained_layout=True)
                     ax_r.scatter(df_plot["Iteration"], df_plot["Number of stars"], color='black', s=50, zorder=3)
-                    if if "NGC 6124 (example)" in cluster_preset:
+                    if "NGC 6124 (example)" in cluster_preset:
                         ax_r.fill_betweenx(1500, 4, 9, color='#FEBB81', alpha=0.5)
                         ax_r.text(x=5, y=500, text='optimal intervals',horizontalalignment='left', fontsize=14)
                     ax_r.set_xlabel("Iteration", fontsize=10)
