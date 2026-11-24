@@ -7,10 +7,13 @@ from astroquery.gaia import Gaia
 from astroquery.vizier import Vizier
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from PIL import Image
+img=Image.open('logoimg.png')
 
 # Page configuration
 st.set_page_config(
-    page_title="Star Cluster Astrometry Parameters Selection Tool",
+    page_title="Exploring Star Clusters: Astrometric Parameter Interval Selection Tool",
+    page_icon=img,
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -166,7 +169,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center;'>Star Cluster Astrometry Parameters Selection Tool</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>Exploring Star Clusters: Astrometric Parameter Interval Selection Tool</h1>", unsafe_allow_html=True)
 st.markdown("<div style='text-align: center; font-size: 20px;'>Web-version of the research application for open star clusters analysis in the browser</div>", unsafe_allow_html=True)
 
 # Detailed Instructions Panel
@@ -179,10 +182,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
-# ==========================================
-# 1. HELPER FUNCTIONS AND CLASSES
-# ==========================================
 
 class LinDens:
     def __init__(self, d):
@@ -400,11 +399,7 @@ def plot_cluster_diagrams(df_sel, df, radius_am, l_med, b_med):
         
     plt.tight_layout()
     return fig1, fig2
-
-
-# ==========================================
-# 2. UI AND APPLICATION CLASS
-# ==========================================
+    
 
 class ClusterAppUI:
     def __init__(self):
@@ -743,9 +738,7 @@ class ClusterAppUI:
             else:
                 st.info("Set your parameters and click **Calculate**.")
 
-        # ==========================================
-        # RIGHT PANEL: SEARCH FOR PLATEAU & COMPLETENESS
-        # ==========================================
+
         with right_half:
             st.subheader("Search for Plateau & Completeness")
             
@@ -846,8 +839,5 @@ class ClusterAppUI:
                     st.info("Graph will appear after the first calculation.")
 
 
-# ==========================================
-# APP EXECUTION
-# ==========================================
 app = ClusterAppUI()
 app.render_interface()
