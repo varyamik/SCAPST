@@ -1,4 +1,6 @@
 import streamlit as st
+import time
+import requests
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -182,6 +184,35 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+VIZIER_MIRRORS = [
+    "vizier.cfa.harvard.edu",   # CfA Harvard (USA)
+    "vizier.idia.ac.za",        # IDIA (South Africa)
+    "vizier.nao.ac.jp",         # NAOJ (Japan)
+    "vizier.china-vo.org",      # China-VO
+    "vizier.ast.cam.ac.uk",     # Cambridge (UK)
+    "vizier.cds.unistra.fr",    # Strasbourg (Main - currently degraded)
+]
+
+@st.cache_resource(ttl=3600)  # Re-checks fastest mirror once per hour
+def get_fastest_vizier_mirror(timeout=1.5):
+    best_mirror = None
+    best_time = float("inf")
+
+    for mirror in VIZIER_MIRRORS:
+        url = f"https://{mirror}/viz-bin/votable"
+        start = time.perf_counter()
+        try:
+            # Send a lightweight HEAD request just like astroquery's find_mirror()
+            resp = requests.head(url, timeout=timeout)
+            if resp.status_code < 500:
+                elapsed = time.perf_counter() - start
+                if elapsed < best_time:
+                    best_time = elapsed
+                    best_mirror = mirror
+        except requests.RequestException:
+            continue
+
+    return best_mirror or "vizier.cfa.harvard.edu"
 
 class LinDens:
     def __init__(self, d):
@@ -258,9 +289,10 @@ def findcentres(inarr, maglim, delta, step, a, d, z):
 
 @st.cache_data(show_spinner=False)
 def fetch_dias_clusters():
+    fastest_mirror = get_fastest_vizier_mirror()
+    v = Vizier(row_limit=2000)
+    v.VIZIER_SERVER = fastest_mirror
     try:
-        v = Vizier(row_limit=2000)
-        v.find_mirror()
         result = v.get_catalogs('J/MNRAS/504/356')
         if result and len(result) > 0:
             for table_key in result.keys():
