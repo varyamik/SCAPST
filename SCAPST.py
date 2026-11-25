@@ -314,68 +314,190 @@ def fetch_dias_clusters():
         st.error(f"Error loading Dias clusters: {e}")
     return None
 
-UNLIMITED = "Unlimited (it will take loooong...)"
-@st.cache_data(show_spinner=False)
-def run_gaia_query(table_name, 
-                   l_center, b_center, 
-                   pmra_min, pmra_max, 
-                   pmdec_min, pmdec_max,
-                   plx_min, plx_max,
-                   radius_am, mag_limit, max_rows):
+# @st.cache_data(show_spinner=True)
+# def fetch_gaia_data_adql(table_name, 
+#                          l_center, b_center, 
+#                          pmra_min, pmra_max, 
+#                          pmdec_min, pmdec_max, 
+#                          plx_min, plx_max, 
+#                          radius_am, mag_limit, max_rows):
+    
+#     if max_rows == "Unlimited (it will take loooong...)":
+#         top_str = "" 
+#         st.warning(f"You chose \"Unlimited\". High risk of server timeout (Error 500) for dense sky regions.")
+#     else:
+#         top_str = f"TOP {max_rows}"
+        
+#     r_deg = radius_am * 3 / 60.0
+#     query = f"""
+#     SELECT TOP {max_rows} 
+#     source_id, ra, ra_error, dec, dec_error, l, b, 
+#     parallax, parallax_error, pmra, pmra_error, pmdec, pmdec_error, 
+#     phot_g_mean_mag, phot_bp_mean_mag, phot_rp_mean_mag, bp_rp
+#     FROM {table_name}
+#     WHERE l BETWEEN {l_center-r_deg} and {l_center+r_deg} AND b BETWEEN {b_center-r_deg} and {b_center+r_deg}
+#     AND pmra BETWEEN {pmra_min} and {pmra_max} AND pmdec BETWEEN {pmdec_min} and {pmdec_max}
+#     AND parallax BETWEEN {plx_min} and {plx_max}
+#     AND phot_g_mean_mag <= {mag_limit}
+#     """
+#     # Создаем виджет прогресс-бара внутри функции
+#     progress_bar = st.progress(0, text="Initializing query...")
+    
+#     try:
+#         if max_rows == "Unlimited (it will take loooong...)":
+#             Gaia.ROW_LIMIT = -1
+#         else:
+#             Gaia.ROW_LIMIT = int(max_rows)
 
-    top_str = "" if max_rows == UNLIMITED else f"TOP {int(max_rows)}"
+#         # Шаг 1: Отправка асинхронной задачи на сервер Gaia
+#         progress_bar.progress(25, text="Sending query to Gaia archive...")
+#         job = Gaia.launch_job_async(query, dump_to_file=False)
+        
+#         # Шаг 2: Получение и скачивание результатов
+#         progress_bar.progress(60, text="Downloading dataset from server...")
+#         r = job.get_results()
+        
+#         # Шаг 3: Конвертация в Pandas DataFrame
+#         progress_bar.progress(85, text="Processing data into DataFrame...")
+#         df = r.to_pandas()
+
+#         if 'bp_rp' not in df.columns or df['bp_rp'].isna().all():
+#             if 'phot_bp_mean_mag' in df.columns and 'phot_rp_mean_mag' in df.columns:
+#                 df['bp_rp'] = df['phot_bp_mean_mag'] - df['phot_rp_mean_mag']
+#             else:
+#                 df['bp_rp'] = 0.0
+                
+#         cleaned_df = df.dropna(subset=['parallax', 'pmra', 'pmdec', 'phot_g_mean_mag', 'l', 'b'])
+        
+#         # Успешное завершение
+#         progress_bar.progress(100, text=f"Done! Successfully loaded {len(cleaned_df):,} sources.")
+#         return cleaned_df
+        
+#     except Exception as e:
+#         progress_bar.empty() # Убираем прогресс-бар при ошибке
+#         st.error(f"ADQL Query Error (Large dataset timeout/SSL): {e}")
+#         return None
+
+@st.cache_data(show_spinner=True)
+def fetch_gaia_data_adql(table_name, 
+                         l_center, b_center, 
+                         pmra_min, pmra_max, 
+                         pmdec_min, pmdec_max, 
+                         plx_min, plx_max, 
+                         radius_am, mag_limit, max_rows):
+    
+    unlimited = (max_rows == "Unlimited (it will take loooong...)")
+    if unlimited:
+        top_str = "" 
+        st.warning(f"You chose \"Unlimited\". High risk of server timeout (Error 500) for dense sky regions.")
+    else:
+        top_str = f"TOP {max_rows}"
         
     r_deg = radius_am * 3 / 60.0
-    c = SkyCoord(l=l_center * u.deg, b=b_center * u.deg, frame="galactic").icrs
-    cone_deg = r_deg * 1.5  # covers the whole box
-                             
+    
+    # Query for the primary server: ESA Gaia Archive
     query = f"""
-    SELECT TOP {top_str} 
+    SELECT {top_str}
     source_id, ra, ra_error, dec, dec_error, l, b, 
     parallax, parallax_error, pmra, pmra_error, pmdec, pmdec_error, 
     phot_g_mean_mag, phot_bp_mean_mag, phot_rp_mean_mag, bp_rp
     FROM {table_name}
-    WHERE 1 = CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', {c.ra.deg}, {c.dec.deg}, {cone_deg}))
-    AND l BETWEEN {l_center-r_deg} and {l_center+r_deg} 
-    AND b BETWEEN {b_center-r_deg} and {b_center+r_deg}
-    AND pmra BETWEEN {pmra_min} and {pmra_max} 
-    AND pmdec BETWEEN {pmdec_min} and {pmdec_max}
+    WHERE l BETWEEN {l_center-r_deg} and {l_center+r_deg} AND b BETWEEN {b_center-r_deg} and {b_center+r_deg}
+    AND pmra BETWEEN {pmra_min} and {pmra_max} AND pmdec BETWEEN {pmdec_min} and {pmdec_max}
     AND parallax BETWEEN {plx_min} and {plx_max}
     AND phot_g_mean_mag <= {mag_limit}
     """
-    Gaia.ROW_LIMIT = -1 if max_rows == UNLIMITED else int(max_rows)
-    job = Gaia.launch_job_async(query, dump_to_file=False)
-    df = job.get_results().to_pandas()
-
-    if 'bp_rp' not in df.columns or df['bp_rp'].isna().all():
-        if 'phot_bp_mean_mag' in df.columns and 'phot_rp_mean_mag' in df.columns:
-            df['bp_rp'] = df['phot_bp_mean_mag'] - df['phot_rp_mean_mag']
-        else:
-            df['bp_rp'] = 0.0
-
-    return df.dropna(subset=['parallax', 'pmra', 'pmdec', 'phot_g_mean_mag', 'l', 'b'])
-        
-def fetch_gaia_data_adql(table_name,
-                         l_center, b_center,
-                         pmra_min, pmra_max,
-                         pmdec_min, pmdec_max,
-                         plx_min, plx_max,
-                         radius_am, mag_limit, max_rows):
+    progress_bar = st.progress(0, text="Initializing query...")
     
-    """UI wrapper (not cached): progress bar, warnings, error display."""
-    if max_rows == UNLIMITED:
-        st.warning("You chose \"Unlimited\". High risk of server timeout (Error 500) for dense sky regions.")
-
-    progress_bar = st.progress(10, text="Sending query to Gaia archive...")
     try:
-        df = run_gaia_query(table_name, l_center, b_center,
-                             pmra_min, pmra_max, pmdec_min, pmdec_max,
-                             plx_min, plx_max, radius_am, mag_limit, max_rows)
-        progress_bar.progress(100, text=f"Done! Successfully loaded {len(df):,} sources.")
-        return df
+        df = None
+        esa_error = None
+
+        # Primary server (ESA Gaia Archive)
+        try:
+            Gaia.ROW_LIMIT = -1 if unlimited else int(max_rows)
+            progress_bar.progress(25, text="Sending query to Gaia archive...")
+            job = Gaia.launch_job_async(query, dump_to_file=False)
+            progress_bar.progress(60, text="Downloading dataset from server...")
+            df = job.get_results().to_pandas()
+        except Exception as e_esa:
+            esa_error = e_esa
+
+        # Mirror (VizieR / CDS TAP) if the ESA archive failed
+        if df is None:
+            mirror_tables = {
+                "gaiadr3.gaia_source": "I/355/gaiadr3",
+                "gaiaedr3.gaia_source": "I/350/gaiaedr3",
+                "gaiadr2.gaia_source": "I/345/gaia2",
+            }
+            if table_name not in mirror_tables:
+                raise RuntimeError(f"ESA archive failed ({esa_error!r}) and there is no mirror for {table_name}")
+
+            progress_bar.progress(30, text="ESA Gaia archive unavailable. Trying the VizieR (CDS) mirror...")
+
+            # VizieR has no l/b-indexed search, so query an ICRS cone that fully covers
+            # the l/b box (radius > sqrt(2)*r_deg) and cut the exact box afterwards.
+            c_icrs = SkyCoord(l=l_center * u.deg, b=b_center * u.deg, frame="galactic").icrs
+            mirror_query = f"""
+            SELECT {top_str}
+            Source, RA_ICRS, e_RA_ICRS, DE_ICRS, e_DE_ICRS,
+            Plx, e_Plx, pmRA, e_pmRA, pmDE, e_pmDE,
+            Gmag, BPmag, RPmag, "BP-RP"
+            FROM {mirror_tables[table_name]}
+            WHERE 1=CONTAINS(POINT('ICRS', RA_ICRS, DE_ICRS), CIRCLE('ICRS', {c_icrs.ra.deg}, {c_icrs.dec.deg}, {r_deg * 1.5}))
+            AND pmRA BETWEEN {pmra_min} AND {pmra_max} AND pmDE BETWEEN {pmdec_min} AND {pmdec_max}
+            AND Plx BETWEEN {plx_min} AND {plx_max}
+            AND Gmag <= {mag_limit}
+            """
+            try:
+                tap_mirror = TapPlus(url="https://tapvizier.cds.unistra.fr/TAPVizieR/tap")
+                progress_bar.progress(50, text="Sending query to VizieR mirror...")
+                mjob = tap_mirror.launch_job_async(mirror_query, dump_to_file=False)
+                progress_bar.progress(70, text="Downloading dataset from VizieR mirror...")
+                df = mjob.get_results().to_pandas()
+            except Exception as e_mirror:
+                raise RuntimeError(f"ESA archive: {esa_error!r} | VizieR mirror: {e_mirror!r}") from e_mirror
+
+            # Rename VizieR columns to the Gaia-archive names used by the rest of the app
+            rename_map = {
+                'source': 'source_id', 'ra_icrs': 'ra', 'e_ra_icrs': 'ra_error',
+                'de_icrs': 'dec', 'e_de_icrs': 'dec_error',
+                'plx': 'parallax', 'e_plx': 'parallax_error',
+                'pmra': 'pmra', 'e_pmra': 'pmra_error', 'pmde': 'pmdec', 'e_pmde': 'pmdec_error',
+                'gmag': 'phot_g_mean_mag', 'bpmag': 'phot_bp_mean_mag', 'rpmag': 'phot_rp_mean_mag',
+                'bp-rp': 'bp_rp',
+            }
+            df.columns = [rename_map.get(str(col).lower(), col) for col in df.columns]
+
+            # Galactic l, b computed locally, then the exact l/b box of the ESA query is applied
+            gal = SkyCoord(ra=df['ra'].to_numpy() * u.deg, dec=df['dec'].to_numpy() * u.deg, frame='icrs').galactic
+            df['l'] = gal.l.deg
+            df['b'] = gal.b.deg
+            dl = ((df['l'] - l_center + 180.0) % 360.0) - 180.0   # handles the l = 0/360 wrap
+            df = df[(dl.abs() <= r_deg) & ((df['b'] - b_center).abs() <= r_deg)].copy()
+            st.info("ESA Gaia archive was unavailable - data loaded from the VizieR (CDS) mirror.")
+        
+        # Convert into Pandas DataFrame
+        progress_bar.progress(85, text="Processing data into DataFrame...")
+
+        if 'bp_rp' not in df.columns or df['bp_rp'].isna().all():
+            if 'phot_bp_mean_mag' in df.columns and 'phot_rp_mean_mag' in df.columns:
+                df['bp_rp'] = df['phot_bp_mean_mag'] - df['phot_rp_mean_mag']
+            else:
+                df['bp_rp'] = 0.0
+                
+        cleaned_df = df.dropna(subset=['parallax', 'pmra', 'pmdec', 'phot_g_mean_mag', 'l', 'b'])
+        
+        # Successful finish
+        progress_bar.progress(100, text=f"Done! Successfully loaded {len(cleaned_df):,} sources.")
+        return cleaned_df
+        
     except Exception as e:
-        progress_bar.empty()
-        st.error(f"ADQL Query Error: {type(e).__name__}: {e!r}")
+        progress_bar.empty() # remove progress bar when there is a error
+        st.error(f"ADQL Query Error (Large dataset timeout/SSL): {type(e).__name__}: {e!r}")
+        import traceback
+        with st.expander("Technical details (copy this when reporting the problem)"):
+            st.code(f"Query (ESA archive):\n{query}\n\n{traceback.format_exc()}")
         return None
 
 def get_tap_table_name(gaia_release_str):
