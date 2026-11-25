@@ -408,6 +408,7 @@ def fetch_gaia_data_adql(table_name,
     AND parallax BETWEEN {plx_min} and {plx_max}
     AND phot_g_mean_mag <= {mag_limit}
     """
+
     progress_bar = st.progress(0, text="Initializing query...")
     
     try:
@@ -424,7 +425,26 @@ def fetch_gaia_data_adql(table_name,
         except Exception as e_esa:
             esa_error = e_esa
 
-        # Mirror (VizieR / CDS TAP) if the ESA archive failed
+        # ARI Heidelberg Gaia TAP (official Gaia mirror, same tables and columns as ESA)
+        ari_error = None
+        if df is None:
+            try:
+                from astroquery.utils.tap.core import TapPlus
+                progress_bar.progress(30, text="ESA Gaia archive unavailable. Trying the ARI Heidelberg mirror...")
+                c_ari = SkyCoord(l=l_center * u.deg, b=b_center * u.deg, frame="galactic").icrs
+                # same query as for ESA, plus an indexed ICRS cone that fully covers the l/b box
+                ari_query = query.replace(
+                    "WHERE l BETWEEN",
+                    f"WHERE 1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', {c_ari.ra.deg}, {c_ari.dec.deg}, {r_deg * 1.5}))\n    AND l BETWEEN", 1)
+                tap_ari = TapPlus(url="https://gaia.ari.uni-heidelberg.de/tap")
+                progress_bar.progress(45, text="Sending query to ARI Heidelberg mirror...")
+                df = tap_ari.launch_job_async(ari_query, dump_to_file=False).get_results().to_pandas()
+                st.info("ESA Gaia archive was unavailable - data loaded from the ARI Heidelberg mirror.")
+            except Exception as e_ari:
+                ari_error = e_ari
+                df = None
+
+        # VizieR on the fastest reachable mirror, last resort
         if df is None:
             mirror_tables = {
                 "gaiadr3.gaia_source": "I/355/gaiadr3",
@@ -432,32 +452,37 @@ def fetch_gaia_data_adql(table_name,
                 "gaiadr2.gaia_source": "I/345/gaia2",
             }
             if table_name not in mirror_tables:
-                raise RuntimeError(f"ESA archive failed ({esa_error!r}) and there is no mirror for {table_name}")
+                raise RuntimeError(f"ESA archive: {esa_error!r} | ARI mirror: {ari_error!r} | no VizieR table for {table_name}")
 
-            progress_bar.progress(30, text="ESA Gaia archive unavailable. Trying the VizieR (CDS) mirror...")
+            # Use the app's own fastest-mirror selection (same as for the Dias catalogue)
+            fastest_mirror = get_fastest_vizier_mirror()
+            progress_bar.progress(50, text=f"ARI mirror failed too. Trying VizieR mirror {fastest_mirror} ...")
 
-            # VizieR has no l/b-indexed search, so query an ICRS cone that fully covers
-            # the l/b box (radius > sqrt(2)*r_deg) and cut the exact box afterwards.
+            # VizieR cone search around the centre; the cone fully covers the l/b box
+            # (radius > sqrt(2)*r_deg) and the exact box is cut afterwards.
             c_icrs = SkyCoord(l=l_center * u.deg, b=b_center * u.deg, frame="galactic").icrs
-            mirror_query = f"""
-            SELECT {top_str}
-            Source, RA_ICRS, e_RA_ICRS, DE_ICRS, e_DE_ICRS,
-            Plx, e_Plx, pmRA, e_pmRA, pmDE, e_pmDE,
-            Gmag, BPmag, RPmag, "BP-RP"
-            FROM {mirror_tables[table_name]}
-            WHERE 1=CONTAINS(POINT('ICRS', RA_ICRS, DE_ICRS), CIRCLE('ICRS', {c_icrs.ra.deg}, {c_icrs.dec.deg}, {r_deg * 1.5}))
-            AND pmRA BETWEEN {pmra_min} AND {pmra_max} AND pmDE BETWEEN {pmdec_min} AND {pmdec_max}
-            AND Plx BETWEEN {plx_min} AND {plx_max}
-            AND Gmag <= {mag_limit}
-            """
             try:
-                tap_mirror = TapPlus(url="https://tapvizier.cds.unistra.fr/TAPVizieR/tap")
-                progress_bar.progress(50, text="Sending query to VizieR mirror...")
-                mjob = tap_mirror.launch_job_async(mirror_query, dump_to_file=False)
-                progress_bar.progress(70, text="Downloading dataset from VizieR mirror...")
-                df = mjob.get_results().to_pandas()
+                v = Vizier(
+                    columns=['Source', 'RA_ICRS', 'e_RA_ICRS', 'DE_ICRS', 'e_DE_ICRS',
+                             'Plx', 'e_Plx', 'pmRA', 'e_pmRA', 'pmDE', 'e_pmDE',
+                             'Gmag', 'BPmag', 'RPmag', 'BP-RP'],
+                    column_filters={
+                        'pmRA': f"{pmra_min}..{pmra_max}",
+                        'pmDE': f"{pmdec_min}..{pmdec_max}",
+                        'Plx': f"{plx_min}..{plx_max}",
+                        'Gmag': f"<={mag_limit}",
+                    },
+                    row_limit=-1 if unlimited else int(max_rows),
+                )
+                v.VIZIER_SERVER = fastest_mirror
+                v.TIMEOUT = 600
+                progress_bar.progress(60, text=f"Querying VizieR mirror {fastest_mirror} (may take a few minutes)...")
+                res = v.query_region(c_icrs, radius=(r_deg * 1.5) * u.deg, catalog=mirror_tables[table_name])
+                if len(res) == 0 or len(res[0]) == 0:
+                    raise RuntimeError("VizieR returned no rows for these parameters")
+                df = res[0].to_pandas()
             except Exception as e_mirror:
-                raise RuntimeError(f"ESA archive: {esa_error!r} | VizieR mirror: {e_mirror!r}") from e_mirror
+                raise RuntimeError(f"ESA archive: {esa_error!r} | ARI mirror: {ari_error!r} | VizieR mirror {fastest_mirror}: {e_mirror!r}") from e_mirror
 
             # Rename VizieR columns to the Gaia-archive names used by the rest of the app
             rename_map = {
@@ -476,9 +501,9 @@ def fetch_gaia_data_adql(table_name,
             df['b'] = gal.b.deg
             dl = ((df['l'] - l_center + 180.0) % 360.0) - 180.0   # handles the l = 0/360 wrap
             df = df[(dl.abs() <= r_deg) & ((df['b'] - b_center).abs() <= r_deg)].copy()
-            st.info("ESA Gaia archive was unavailable - data loaded from the VizieR (CDS) mirror.")
+            st.info(f"ESA Gaia archive was unavailable - data loaded from the VizieR mirror {fastest_mirror}.")
         
-        # Convert into Pandas DataFrame
+        # Converting into Pandas DataFrame
         progress_bar.progress(85, text="Processing data into DataFrame...")
 
         if 'bp_rp' not in df.columns or df['bp_rp'].isna().all():
@@ -494,7 +519,7 @@ def fetch_gaia_data_adql(table_name,
         return cleaned_df
         
     except Exception as e:
-        progress_bar.empty() # remove progress bar when there is a error
+        progress_bar.empty() # remove progress bar if the error arises
         st.error(f"ADQL Query Error (Large dataset timeout/SSL): {type(e).__name__}: {e!r}")
         import traceback
         with st.expander("Technical details (copy this when reporting the problem)"):
