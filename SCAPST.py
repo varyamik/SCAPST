@@ -443,7 +443,7 @@ def fetch_gaia_data_adql(table_name,
                 tap_ari = TapPlus(url="https://gaia.ari.uni-heidelberg.de/tap")
 
                 # Submit in the background and poll, so the progress text shows what the server is doing
-                ari_timeout_s = 300
+                ari_timeout_s = 60
                 ajob = tap_ari.launch_job_async(ari_query, dump_to_file=False, background=True)
                 t_start = time.time()
                 while True:
