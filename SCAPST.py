@@ -15,7 +15,7 @@ img=Image.open('logoimg.png')
 
 # Page configuration
 st.set_page_config(
-    page_title="Star Cluster Astrometric Parameters Selection Tool",
+    page_title="Exploring Star Clusters: Astrometric Parameter Intervals Selection Tool",
     page_icon=img,
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -172,7 +172,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center;'>Star Cluster Astrometric Parameters Selection Tool</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>Exploring Star Clusters: Astrometric Parameter Intervals Selection Tool</h1>", unsafe_allow_html=True)
 st.markdown("<div style='text-align: center; font-size: 20px;'>Web-version of the research application for open star clusters analysis in the browser</div>", unsafe_allow_html=True)
 
 # Detailed Instructions Panel
@@ -379,7 +379,7 @@ def fetch_dias_clusters():
 #         st.error(f"ADQL Query Error (Large dataset timeout/SSL): {e}")
 #         return None
 
-@st.cache_data(show_spinner=True)
+@st.cache_data(show_spinner=False)
 def fetch_gaia_data_adql(table_name, 
                          l_center, b_center, 
                          pmra_min, pmra_max, 
@@ -408,7 +408,7 @@ def fetch_gaia_data_adql(table_name,
     AND parallax BETWEEN {plx_min} and {plx_max}
     AND phot_g_mean_mag <= {mag_limit}
     """
-
+    # Создаем виджет прогресс-бара внутри функции
     progress_bar = st.progress(0, text="Initializing query...")
     
     try:
@@ -430,15 +430,40 @@ def fetch_gaia_data_adql(table_name,
         if df is None:
             try:
                 from astroquery.utils.tap.core import TapPlus
-                progress_bar.progress(30, text="ESA Gaia archive unavailable. Trying the ARI Heidelberg mirror...")
+                progress_bar.progress(30, text="ESA Gaia archive unavailable. Checking the ARI Heidelberg mirror...")
+                # Fails within 10 s if this server cannot be reached from where the app runs
+                # (otherwise a blocked connection hangs for about two minutes).
+                requests.head("https://gaia.ari.uni-heidelberg.de/tap", timeout=10, allow_redirects=True)
+
                 c_ari = SkyCoord(l=l_center * u.deg, b=b_center * u.deg, frame="galactic").icrs
                 # same query as for ESA, plus an indexed ICRS cone that fully covers the l/b box
                 ari_query = query.replace(
                     "WHERE l BETWEEN",
                     f"WHERE 1=CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', {c_ari.ra.deg}, {c_ari.dec.deg}, {r_deg * 1.5}))\n    AND l BETWEEN", 1)
                 tap_ari = TapPlus(url="https://gaia.ari.uni-heidelberg.de/tap")
-                progress_bar.progress(45, text="Sending query to ARI Heidelberg mirror...")
-                df = tap_ari.launch_job_async(ari_query, dump_to_file=False).get_results().to_pandas()
+
+                # Submit in the background and poll, so the progress text shows what the server is doing
+                ari_timeout_s = 300
+                ajob = tap_ari.launch_job_async(ari_query, dump_to_file=False, background=True)
+                t_start = time.time()
+                while True:
+                    phase = str(ajob.get_phase(update=True)).upper()
+                    waited = int(time.time() - t_start)
+                    if phase == "COMPLETED":
+                        break
+                    if phase in ("ERROR", "ABORTED"):
+                        ajob.get_results()  # raises with the server's own error message
+                        raise RuntimeError(f"ARI job finished with phase {phase}")
+                    if waited > ari_timeout_s:
+                        try:
+                            ajob.abort()
+                        except Exception:
+                            pass
+                        raise TimeoutError(f"ARI query still '{phase}' after {ari_timeout_s} s")
+                    progress_bar.progress(45, text=f"ARI Heidelberg: job {phase.lower()}, waiting {waited} s ...")
+                    time.sleep(3)
+                progress_bar.progress(55, text="Downloading dataset from ARI Heidelberg...")
+                df = ajob.get_results().to_pandas()
                 st.info("ESA Gaia archive was unavailable - data loaded from the ARI Heidelberg mirror.")
             except Exception as e_ari:
                 ari_error = e_ari
@@ -519,7 +544,7 @@ def fetch_gaia_data_adql(table_name,
         return cleaned_df
         
     except Exception as e:
-        progress_bar.empty() # remove progress bar if the error arises
+        progress_bar.empty()
         st.error(f"ADQL Query Error (Large dataset timeout/SSL): {type(e).__name__}: {e!r}")
         import traceback
         with st.expander("Technical details (copy this when reporting the problem)"):
