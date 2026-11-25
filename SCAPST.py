@@ -368,7 +368,7 @@ def fetch_gaia_data_adql(table_name,
 
     progress_bar = st.progress(10, text="Sending query to Gaia archive...")
     try:
-        df = _run_gaia_query(table_name, l_center, b_center,
+        df = run_gaia_query(table_name, l_center, b_center,
                              pmra_min, pmra_max, pmdec_min, pmdec_max,
                              plx_min, plx_max, radius_am, mag_limit, max_rows)
         progress_bar.progress(100, text=f"Done! Successfully loaded {len(df):,} sources.")
