@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from astroquery.gaia import Gaia
-from astroquery.vizier import Vizier
+from astroquery.vizier import Vizier, conf
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from PIL import Image
@@ -12,7 +12,7 @@ img=Image.open('logoimg.png')
 
 # Page configuration
 st.set_page_config(
-    page_title="Exploring Star Clusters: Astrometric Parameter Interval Selection Tool",
+    page_title="Star Cluster Astrometric Parameters Selection Tool",
     page_icon=img,
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -169,7 +169,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center;'>Exploring Star Clusters: Astrometric Parameter Interval Selection Tool</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>Star Cluster Astrometric Parameters Selection Tool</h1>", unsafe_allow_html=True)
 st.markdown("<div style='text-align: center; font-size: 20px;'>Web-version of the research application for open star clusters analysis in the browser</div>", unsafe_allow_html=True)
 
 # Detailed Instructions Panel
@@ -259,7 +259,7 @@ def findcentres(inarr, maglim, delta, step, a, d, z):
 @st.cache_data(show_spinner=False)
 def fetch_dias_clusters():
     try:
-        v = Vizier(row_limit=2000)
+        v = Vizier(find_mirror=True, row_limit=2000)
         result = v.get_catalogs('J/MNRAS/504/356')
         if result and len(result) > 0:
             for table_key in result.keys():
