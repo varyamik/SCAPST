@@ -6,7 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from astroquery.gaia import Gaia
-from astroquery.vizier import Vizier, conf
+from astroquery.vizier import Vizier
+from astroquery.utils.tap.core import TapPlus
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from PIL import Image
