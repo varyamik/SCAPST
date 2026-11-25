@@ -259,7 +259,8 @@ def findcentres(inarr, maglim, delta, step, a, d, z):
 @st.cache_data(show_spinner=False)
 def fetch_dias_clusters():
     try:
-        v = Vizier(find_mirror=True, row_limit=2000)
+        v = Vizier(row_limit=2000)
+        v.find_mirror()
         result = v.get_catalogs('J/MNRAS/504/356')
         if result and len(result) > 0:
             for table_key in result.keys():
