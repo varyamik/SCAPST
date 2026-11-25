@@ -2,5 +2,5 @@ streamlit
 pandas
 numpy
 matplotlib
-astroquery
+astroquery>=0.4.7
 astropy
