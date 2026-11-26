@@ -1,4 +1,4 @@
-# ESCAPIST &mdash Technical Description
+# ESCAPIST — Technical Description
 
 *Exploring Star Clusters: Astrometric Parameter Intervals Selection Tool* (formerly SCAPST). Public instance: <https://scapst.streamlit.app/>.
 
@@ -25,12 +25,12 @@ This document describes how the application in `SCAPST.py` works: architecture, 
 
 ## 1. Purpose and scientific background
 
-Members of an open cluster share an origin, so their parallaxes ϖ and proper motions (μα, μδ) have a small spread. Cutting the Gaia catalogue by astrometric **intervals** ("corridors") removes most field stars, but:
+Members of an open cluster share an origin, so their parallaxes $\varpi$ and proper motions $\mu_\alpha$, $\mu_\delta$ have a small spread. Cutting the Gaia catalogue by astrometric **intervals** removes most field stars, but:
 
 - an interval that is too wide keeps field stars, and large-scale fluctuations of the field density distort the statistics;
 - an interval that is too narrow cuts away cluster members because of astrometric errors.
 
-Members cannot be identified individually this way, so the cluster is studied statistically: the number of cluster stars is estimated as the star count inside the cluster circle minus the count in a background ring. The tool computes this number for a series of progressively narrower corridors. The corridors where the number is maximal and approximately constant (the **plateau**) are taken as optimal (Mikhnevich & Seleznev, 2022).
+Members cannot be identified individually this way, so the cluster is studied statistically: the number of cluster stars is estimated as the star count inside the cluster circle minus the count in a background ring. The tool computes this number for a series of progressively narrower intervals. The intervals where the number is maximal and approximately constant (the **plateau**) are taken as optimal ([Mikhnevich & Seleznev, 2022](https://elar.urfu.ru/handle/10995/115949?locale=en)).
 
 ## 2. Architecture overview
 
@@ -38,20 +38,20 @@ The application is a single Python file, `SCAPST.py`, run by Streamlit. Streamli
 
 ```mermaid
 flowchart TD
-    UI[Streamlit UI<br/>ClusterAppUI.render_interface] -->|Calculate| P[Collect parameters p]
-    P --> D{Corridor, radius,<br/>magnitude or release<br/>wider than cached?}
-    D -- yes --> F[fetch_gaia_data_adql]
-    D -- no --> C[raw_gaia_df<br/>from session_state]
+    UI[Streamlit UI<br/>ClusterAppUI.render_interface] -->|Calculate| P[Collect parameters]
+    P --> D{Intervals, radius,<br/>magnitude or release<br/>wider than cached?}
+    D -- yes --> F[New query with<br/>fetch_gaia_data_adql]
+    D -- no --> C[Saved data table<br/>from session_state]
     F --> E1[1. ESA Gaia Archive]
     E1 -- fails --> E2[2. ARI Heidelberg TAP]
     E2 -- fails --> E3[3. VizieR, fastest mirror]
     E1 --> C
     E2 --> C
     E3 --> C
-    C --> S[Local selection by corridor]
-    S --> K[findcentres: 1-D density modes]
-    S --> N[Circle minus ring count]
-    S --> G[plot_cluster_diagrams]
+    C --> S[Local intervals change]
+    S --> K[Search for parameter modes:<br/>1-D density distributions]
+    S --> N[Counts in areas]
+    S --> G[Cluster diagrams]
     K --> R[results in session_state]
     N --> R
     G --> R
@@ -64,13 +64,13 @@ flowchart TD
 |---|---|---|
 | `VIZIER_MIRRORS` | constant | List of VizieR mirror host names |
 | `get_fastest_vizier_mirror()` | function (`st.cache_resource`, TTL 1 h) | Sends a `HEAD` request to each mirror (timeout 1.5 s) and returns the fastest that answers; default `vizier.cfa.harvard.edu` |
-| `LinDens` | class | One-dimensional density estimate on a regular grid with a biweight kernel |
-| `findcentres()` | function | Runs `LinDens` for μα, μδ and ϖ and returns the three density maxima |
+| `LinDens` | class | One-dimensional kernel density estimate on a regular grid (step 0.1), using a quartic kernel of half-width $\delta=0.3$; the grid node with the highest density gives the most probable value of a parameter |
+| `findcentres()` | function | Runs `LinDens` for  $\mu_\alpha$, $\mu_\delta$ and $\varpi$ and returns the three density maxima |
 | `fetch_dias_clusters()` | function (`st.cache_data`) | Downloads the Dias et al. (2021) catalogue from VizieR |
-| `fetch_gaia_data_adql()` | function (`st.cache_data`) | Downloads the Gaia table for the selected area and corridors, with fallback servers |
+| `fetch_gaia_data_adql()` | function (`st.cache_data`) | Downloads the Gaia table for the selected area and intervals, with fallback servers |
 | `get_tap_table_name()` | function | Maps the release choice to the ESA table name |
-| `plotting_diagramms()` | function | One scatter panel |
-| `plot_cluster_diagrams()` | function | Builds the two figures (CMD + sky map; μα, μδ, ϖ versus G) |
+| `plotting_diagramms()` | function | Sets diagram structure |
+| `plot_cluster_diagrams()` | function | Builds the figures (CMD + sky map; $\mu_\alpha$, $\mu_\delta$, $\varpi$ versus G magnitude) |
 | `ClusterAppUI` | class | Builds the interface and runs the calculation (`render_interface`) |
 
 ## 3. Data sources
@@ -97,7 +97,7 @@ The Dias catalogue is read with `get_catalogs`; the code uses the first returned
 1. All widget values are collected into a dictionary `p`: centre (l, b), the six interval limits, radius, magnitude limit, maximum rows, ESA table name and cluster name. It is stored as `calc_params`.
 2. The app decides whether a new query is needed (section 6). If so, `fetch_gaia_data_adql` is called inside an `st.status` box; otherwise the stored table `raw_gaia_df` is reused.
 3. The table is filtered locally by the three intervals (`pmra`, `pmdec`, `parallax` between their min and max, inclusive). The result is `df_sel`; its length is *Total number of stars in the area*.
-4. `findcentres` computes the density maxima of μα, μδ, ϖ (section 7.2). Distance and tangential velocities are derived from them.
+4. `findcentres` computes the density maxima of $\mu_\alpha$, $\mu_\delta$, $\varpi$ (section 7.2). Distance and tangential velocities are derived from them.
 5. The circle and ring counts are computed and the background-adjusted cluster count is obtained (section 7.3).
 6. The figures are built, the results are stored in `session_state["results"]`, and one row is appended to the iteration history of the current cluster (section 7.4).
 7. After the left-hand calculation, the interface renders the results, and the right-hand panel renders the iteration table and plot.
@@ -142,16 +142,18 @@ WHERE l  BETWEEN l0 - r_box AND l0 + r_box
 
 1. **ESA Gaia Archive**.
 2. **ARI Heidelberg**: first a `HEAD` request with a 10 s timeout checks that the server is reachable (otherwise a blocked connection would hang for about two minutes). The job is then submitted in the background and polled every 3 s; the progress bar shows the job phase and the time waited. The wait is limited by `ari_timeout_s` and the job is aborted on timeout.
-3. **VizieR** on the mirror chosen by `get_fastest_vizier_mirror()`. A cone search (`Vizier.query_region`) with radius `1.5·r_box` is used, with the proper-motion, parallax and magnitude cuts passed as `column_filters`, a row limit equal to *Max Number of Sources*, and a timeout of 600 s.
+3. **VizieR** on the mirror chosen by `get_fastest_vizier_mirror()`. A cone search (`Vizier.query_region`) with radius `√2·r_box` is used, with the proper-motion, parallax and magnitude cuts passed as `column_filters`, a row limit equal to *Max Number of Sources*, and a timeout of 60 s.
 
-After a VizieR download the code (a) renames the columns to the Gaia-archive names (`Source→source_id`, `RA_ICRS→ra`, `DE_ICRS→dec`, `Plx→parallax`, `pmRA→pmra`, `pmDE→pmdec`, `Gmag→phot_g_mean_mag`, `BP-RP→bp_rp`, and so on), (b) computes `l` and `b` from `ra`/`dec` with astropy, and (c) applies the exact l/b box, taking the wrap at l = 0°/360° into account.
+After a VizieR download the code :
+(a) renames the columns to the Gaia-archive names (`Source → source_id`, `RA_ICRS → ra`, `DE_ICRS → dec`, `Plx → parallax`, `pmRA → pmra`, `pmDE → pmdec`, and so on); 
+(b) computes `l` and `b` from `ra`/`dec` with astropy;
+(c) applies the exact l/b box, taking the wrap at l = 0°/360° into account.
 
 If all servers fail, one error message lists the error of each, and an expander shows the query and the Python traceback.
 
 ### 5.4 Post-processing (all servers)
 
-- If `bp_rp` is missing or entirely empty, it is computed as `phot_bp_mean_mag − phot_rp_mean_mag` (or set to 0 if those columns are absent too).
-- Rows with a missing `parallax`, `pmra`, `pmdec`, `phot_g_mean_mag`, `l` or `b` are dropped.
+If `bp_rp` is missing or entirely empty, it is computed as `phot_bp_mean_mag − phot_rp_mean_mag` (or set to 0 if those columns are absent too).
 
 ## 6. Caching and re-query logic
 
@@ -159,8 +161,8 @@ There are four cache layers.
 
 | Layer | Mechanism | Key / lifetime | Purpose |
 |---|---|---|---|
-| Wide-corridor table | `st.session_state["raw_gaia_df"]` and `["last_queried_params"]` | One browser session; cleared when the cluster changes or on Reset | Download once, then filter locally while the corridors are narrowed |
-| Query result | `@st.cache_data` on `fetch_gaia_data_adql` | The full argument tuple; until the cache is cleared | Identical repeat queries are not sent again |
+| Wide-interval table | `st.session_state["raw_gaia_df"]` and `["last_queried_params"]` | One browser session; cleared when the cluster changes or on Reset | Download once, then filter locally while the intervals are narrowed |
+| Query result | `@st.cache_data` on `fetch_gaia_data_adql` | The full argument tuple; cleared when the cluster changes and on Reset | Identical repeat queries are not sent again |
 | Dias catalogue | `@st.cache_data` on `fetch_dias_clusters` | Until the cache is cleared | Load the cluster list once |
 | Fastest mirror | `@st.cache_resource(ttl=3600)` | 1 hour | Do not probe the mirrors on every run |
 
@@ -178,7 +180,7 @@ Otherwise the stored table is reused, an information message says so, and no net
 ### Not covered by the rule
 
 - A change of **Max Number of Sources** does not trigger a new query. A table downloaded with a lower limit stays in use after the limit is raised.
-- Failed queries are also cached by `@st.cache_data` (the function returns `None`), so repeating the same request returns the failure immediately. Use *Clear cache* (press `C` in the app) or **Reset**.
+- Failed or empty results are removed from the cache immediately after the call.
 
 ## 7. Algorithms
 
@@ -194,11 +196,11 @@ The intervals are closed. The number of rows of `df_sel` is the *Total number of
 
 ### 7.2 Most probable values: 1-D kernel density estimate
 
-`findcentres(inarr, maglim, delta, step, a, d, z)` receives an array of rows `(parallax, pmra, pmdec, G)` from `df_sel` and three ranges (for μα, μδ, ϖ). It builds three independent one-dimensional densities with the class `LinDens` and returns the position of each maximum.
+`findcentres(inarr, maglim, delta, step, a, d, z)` receives an array of rows `(parallax, pmra, pmdec, G)` from `df_sel` and three ranges for $\mu_\alpha$, $\mu_\delta$ and $\varpi$. It builds three independent one-dimensional densities with the class `LinDens` and returns the position of each maximum.
 
 **Grid.** For a parameter with the range `[x_min, x_max]`, the grid nodes are `x_i = x_min + i·step`, `i = 0 … int((x_max − x_min)/step) − 1`, with `step = 0.1` (mas/yr for proper motion, mas for parallax).
 
-**Kernel.** Every star with `G ≤ maglim` and value `x` adds to the grid nodes within `±delta` of `x` the biweight (quartic) kernel
+**Kernel.** Every star with `G ≤ `*Magnitude limit* and value `x` adds to the grid nodes within `±delta` of `x` the quartic kernel
 
 ```
 K(x_i; x) = 15/16 · [1 − ((x − x_i)/δ)²]² / δ      for |x − x_i| ≤ δ,  otherwise 0
@@ -208,7 +210,7 @@ with the half-width `δ = 0.3`. The kernel integrates to one, so the grid values
 
 **Result.** The estimated mode is the node with the highest density, `x_mode = x_{argmax}`; it is `NaN` if the density is empty. Because the grid step is 0.1, **modes are quantised to 0.1** of the parameter unit.
 
-**Window logic.** `LinDens` supports an inner window for selecting which stars contribute (a star adds to the μα density only if its μδ lies in the μδ inner window, and vice versa; ϖ uses its own window). The app passes the corridor limits as both outer and inner bounds (`[min, min, max, max]`). Since `df_sel` already lies inside the corridor, the inner windows do not exclude anything: all selected stars with `G ≤ maglim` contribute to all three densities.
+**Window logic.** `LinDens` supports an inner window for selecting which stars contribute (a star adds to the μα density only if its μδ lies in the μδ inner window, and vice versa; ϖ uses its own window). The app passes the interval limits as both outer and inner bounds (`[min, min, max, max]`). Since `df_sel` already lies inside the interval, the inner windows do not exclude anything: all selected stars with `G ≤ maglim` contribute to all three densities.
 
 **Derived quantities** (in `render_interface`):
 
@@ -245,12 +247,12 @@ Each **Calculate** appends one row to `session_state["cluster_history"][cluster_
 | Column | Content |
 |---|---|
 | Iteration | Row number |
-| Width | Sum of the three interval widths `(Δμα + Δμδ + Δϖ)`; used for sorting, not displayed |
+| Width | Sum of the three interval widths $\Delta\mu_\alpha$ + $\Delta\mu_\delta$ + $\Delta\varpi$; used for sorting, not displayed |
 | Number of stars | `N_cluster` |
-| μα, μδ, ϖ intervals | The selection limits |
-| μα, μδ, ϖ mode | Density maxima (`N/A` if undefined) |
+| $\mu_\alpha$, $\mu_\delta$ and $\varpi$ intervals | The selection limits |
+| $\mu_\alpha$, $\mu_\delta$ and $\varpi$ mode | Density maxima (`N/A` if undefined) |
 
-The right-hand panel shows this table, with an optional sort by width (wide to narrow, rows renumbered), a CSV export, and *Clear Table*. The plot *Cluster Star Count vs. Iteration* shows `N_cluster` against the iteration number. The **plateau is judged by eye**: the app does not fit a curve or detect it automatically. For the NGC 6124 example the iterations 4–9 are shaded and labelled "optimal intervals" (hard-coded values from the paper).
+The right-hand panel shows this table, with an optional sort by width (wide to narrow, rows renumbered), a CSV export, and *Clear Table*. The plot *Cluster Star Count vs. Iteration* shows number of stars against the iteration number. The **plateau is judged by eye**: the app does not fit a curve or detect it automatically. For the NGC 6124 example the iterations 4–9 are shaded and labelled "optimal intervals" (hard-coded values from the paper).
 
 For the NGC 6124 example, the table is preloaded with Table 1 of the paper (12 samples, without the mode columns). It is created once per session unless **Reset** was used.
 
@@ -259,11 +261,9 @@ For the NGC 6124 example, the table is preloaded with Table 1 of the paper (12 s
 `plot_cluster_diagrams(df_sel, df, radius_am, l_med, b_med)` returns two Matplotlib figures (transparent background, 300 dpi):
 
 - **Figure 1**, two panels:
-  - colour–magnitude diagram: `bp_rp` on the x axis, `phot_g_mean_mag` on the y axis, y axis inverted (the y label reads *M_G*; see section 12);
+  - colour–magnitude diagram: `bp_rp` on the x axis, `phot_g_mean_mag` on the y axis, y axis inverted;
   - sky map in (l, b) of the selected stars, with two circles, the cluster circle (radius R) and the ring boundary (radius √2·R), drawn in degrees centred on (l₀, b₀).
 - **Figure 2**, three panels: `pmra`, `pmdec` and `parallax` against `phot_g_mean_mag`.
-
-Points are drawn as tiny black dots (`s=0.1`, `alpha=0.6`); axis limits are the data minimum and maximum.
 
 ## 9. Session state
 
@@ -272,11 +272,11 @@ Points are drawn as tiny black dots (`s=0.1`, `alpha=0.6`); axis limits are the 
 | `last_cluster` | Cluster selected on the previous run (used to detect a change) |
 | `calculated` | `True` after the first Calculate |
 | `calc_params` | The dictionary `p` of the last Calculate |
-| `raw_gaia_df` | Stored wide-corridor Gaia table |
+| `raw_gaia_df` | Stored wide-interval Gaia table |
 | `last_queried_params` | `p` of the last successful query |
 | `results` | Statistics, figures and counts of the last calculation (or `None`) |
 | `cluster_history` | Dictionary: cluster name → list of iteration rows |
-| `sort_wide_to_narrow` | Sorting toggle for the table and plot |
+| `sort_wide_to_narrow` | Sorting toggle for the table and plateau plot |
 | `reset_performed` | Set by Reset to stop the example table from being recreated |
 | `cluster_preset_widget` | Value of the cluster selector |
 
@@ -308,46 +308,42 @@ The file `logoimg.png` is opened with `Image.open('logoimg.png')` at import time
 
 A public instance is hosted on Streamlit at <https://scapst.streamlit.app/>. Free-tier apps go to sleep after a period of inactivity and wake up on the next visit.
 
-Local run: `streamlit run SCAPST.py` (default port 8501). For a temporary public link to a local instance, a tunnelling tool such as `ngrok http 8501` can be used.
-
 The hosting machine needs outbound HTTPS access to at least one of the data servers (ESA, ARI, VizieR mirrors). A server that cannot be reached can cost up to about two minutes of waiting before the next fallback is tried (the ARI reachability check shortens this to 10 s).
 
 ## 12. Known limitations and open issues
 
-1. **Cluster centre is not estimated.** The centre comes from the Dias catalogue (RA/Dec converted to l, b) or, for the NGC 6124 example, from fixed values (l = 340.73°, b = +5.98°). The interface has no input for the centre. The desktop version estimated it once with a 1-D KDE.
-2. **CMD axis label.** The y axis of the colour–magnitude diagram is labelled *M_G*, but the plotted quantity is the **apparent** `phot_g_mean_mag`, against the observed (not dereddened) BP−RP. No distance modulus or extinction correction is applied. Either the label or the calculation should be changed.
+1. **Cluster centre is not estimated.** The centre comes from the Dias catalogue (RA/Dec converted to l, b) or, for the NGC 6124 example, from fixed values (l = 340.73°, b = +5.98°). The interface has no input for the centre.
 3. **Flat angular distances.** Distances in section 7.3 are Euclidean in (l, b) degrees, without the `cos b` factor for l and without the wrap at l = 0°/360°. This is a good approximation near the Galactic plane and for small radii, and degrades at high |b| or near l = 0°. (The VizieR fallback does handle the l wrap when cutting the box.)
 4. **Silent truncation.** If the number of returned rows equals *Max Number of Sources*, the sample is incomplete, with no warning and no `ORDER BY`. The cluster count is then unreliable.
 5. **Row-limit change does not refresh the table** (section 6).
-6. **Failed queries are cached** (section 6).
-7. **Mode resolution.** Density maxima are quantised to `step = 0.1`. For very narrow corridors (width comparable to `2·delta`) the kernel is truncated at the corridor edge and the maximum is biased towards the interior.
+7. **Mode resolution.** Density maxima are quantised to `step = 0.1`. For very narrow intervals (width comparable to `2·delta`) the kernel is truncated at the interval edge and the maximum is biased towards the interior.
 8. **Distance and velocities** are simple inversions of the parallax mode: no zero-point correction and no uncertainty estimate. The tangential velocities exclude the radial velocity.
 9. **Background subtraction** assumes a uniform field and a spherical cluster contained in the circle. In crowded fields near the plane, or for clusters with extended halos or tidal tails, `N_cluster` is a statistical estimate only, and it can be negative before the `max(0, …)` clipping.
 10. **Plateau selection is manual.** There is no automatic plateau detection or curve fit; the shaded band is hard-coded for the NGC 6124 example only.
 11. **History rows are not de-duplicated.** Pressing **Calculate** twice with identical inputs adds two identical rows.
 12. **Fallback servers** are not guaranteed to hold exactly the same data as the ESA archive (for example a mirror may lag behind, or apply its own row cap). Gaia DR4 will initially be available from the ESA archive only. Only DR2, EDR3 and DR3 are offered in the interface.
-13. **Naming.** The entry-point file keeps the historical name `SCAPST.py` (and the Streamlit address `scapst.streamlit.app`), while the application is now called ESCAPIST. Keep the page title in the code, the README and the paper reference consistent.
 
-## 13. Differences from the 2022 desktop version
+## 13. Comparison the 2022 desktop version
 
 | Aspect | Desktop (paper, Tkinter) | Web version (this repository) |
 |---|---|---|
-| Interface | Tkinter, spin boxes, **Redraw** button | Streamlit, number inputs, **Calculate** button |
+| Interface | Tkinter, spin boxes | Streamlit, number inputs |
 | Data input | Read from a local file; some parameters changed in the code | Live ADQL/TAP queries to Gaia (with fallbacks) and VizieR |
-| Gaia release | EDR3 | DR3, EDR3 or DR2 |
 | Cluster selection | Fixed in the code | Drop-down with the Dias et al. (2021) catalogue |
-| Cluster centre | Estimated once with a 1-D KDE | Taken from the catalogue (section 12, item 1) |
-| Modes of μα, μδ, ϖ | 1-D KDE | 1-D KDE (biweight kernel, `δ = 0.3`, `step = 0.1`) |
+| Cluster center | Estimated once with a 1-D KDE | Taken from the Dias et al. (2021) catalogue |
+| Modes of $\mu_\alpha$, $\mu_\delta$, $\varpi$ | 1-D KDE | Same |
 | Cluster count | Circle minus equal-area ring | Same |
 | Iteration series | Done by hand, tabulated in the paper | Iteration table, sorting, CSV export and plot built in |
 | Re-querying | Not applicable (file) | Wide table cached, local filtering, re-query only when widening |
-| CMD y axis | Absolute magnitude M_G | Apparent G, labelled M_G (section 12, item 2) |
+| CMD y axis | Absolute magnitude $M_G$ | Apparent $G$ |
 
 ## 14. References
 
 - V. O. Mikhnevich, A. F. Seleznev, *Method for selecting stars from Gaia EDR3 for statistical investigation of an open cluster*, Ural Federal University, 2022.
 - Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *The Gaia mission*, A&A 595 (2016).
+- Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *Gaia Data Release 2: Summary of the contents and survey properties*, A&A 616 (2018).
 - Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *Gaia Early Data Release 3: Summary of the contents and survey properties*, A&A 649 (2021).
+- Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *Gaia Data Release 3: Summary of the contents and survey properties*, A&A 674 (2023).
 - Dias W. S. et al., *Updated parameters of 1743 open clusters based on Gaia DR2*, MNRAS 504, 356 (2021), VizieR `J/MNRAS/504/356`.
 - Ochsenbein F., Bauer P., Marcout J., *The VizieR database of astronomical catalogues*, A&AS 143, 23 (2000).
 - Astropy Collaboration; Ginsburg A. et al., *astroquery: An Astronomical Web-querying Package in Python*, AJ 157, 98 (2019).
