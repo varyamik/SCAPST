@@ -74,7 +74,7 @@ The preset reproduces the setup of the paper (centre l = 340.73°, b = +5.98°, 
 | Output | Meaning |
 |---|---|
 | $\mu_\alpha$, $\mu_\delta$, $\varpi$ (modes) | Most probable values from a 1-D kernel density estimate |
-| $V_\alpha$, $V_\delta$, distance | Tangential velocities (4.74\cdot\mu/\varpi, km/s) and distance (1000/\mu, pc) |
+| $V_\alpha$, $V_\delta$, distance | Tangential velocities (4.74*μ*/*ϖ*, km/s) and distance (1000/*ϖ*, pc) |
 | Stars in the area / circle / ring | Counts after the interval selection |
 | Cluster stars, background-adjusted | Circle count minus ring count |
 | Iteration table and plot | One row per **Calculate**, used to find the plateau |
