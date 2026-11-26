@@ -639,6 +639,7 @@ class ClusterAppUI:
                 st.session_state.pop("fig_r", None)
                 st.session_state.pop("raw_gaia_df", None)
                 st.session_state.pop("last_queried_params", None)
+                fetch_gaia_data_adql.clear()
 
             cluster_preset = st.session_state["last_cluster"]
 
@@ -784,12 +785,13 @@ class ClusterAppUI:
                             mag_limit=p["maglim"],
                             max_rows=p["max_rows"]
                         )
-                        
-                        if df is not None and not df.empty:
+
+                        if df in None or df.empty:
+                            fetch_gaia_data_adql.clear()
+                            status.update(label="Failed to retrieve data from TAP server", state="error", expanded=False)
+                        elif df is not None and not df.empty:
                             st.write("Data successfully retrieved from TAP server.")
-                            status.update(label="Data loaded from TAP successfully", state="complete", expanded=False)
-                        else:
-                            status.update(label="Failed to retrieve data from TAP", state="error", expanded=False)
+                            status.update(label="Data successfully retrieved from TAP server", state="complete", expanded=False)
 
                     if df is not None and not df.empty:
                         st.session_state["raw_gaia_df"] = df
@@ -813,7 +815,9 @@ class ClusterAppUI:
                             mag_limit=p["maglim"],
                             max_rows=p["max_rows"]
                         )
-                        if df is not None and not df.empty:
+                        if df in None or df.empty:
+                            fetch_gaia_data_adql.clear()
+                        elif df is not None and not df.empty:
                             st.session_state["raw_gaia_df"] = df
                             st.session_state["last_queried_params"] = p
 
