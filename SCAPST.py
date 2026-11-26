@@ -572,7 +572,7 @@ def plot_cluster_diagrams(df_sel, df, radius_am, l_med, b_med):
     
     ax1 = fig1.add_subplot(1, 2, 1)
     if 'bp_rp' in df_sel.columns and len(df_sel) > 0:
-        plotting_diagramms(ax1, df_sel['bp_rp'], df_sel['phot_g_mean_mag'], r"$BP - RP$", r"$M_G$")
+        plotting_diagramms(ax1, df_sel['bp_rp'], df_sel['phot_g_mean_mag'], r"$BP - RP$", r"$G$")
         ax1.set_box_aspect(1)
         ax1.invert_yaxis()
 
