@@ -6,8 +6,7 @@
 
 A web application for finding the **optimal astrometric intervals** (proper motion and parallax) for separating an open star cluster from the Galactic field, using Gaia data. It runs in the browser and is built with [Streamlit](https://streamlit.io).
 
-The method and the original desktop (Tkinter) program are described in:
-
+> The original desktop (Tkinter) program are described in:
 > V. O. Mikhnevich, A. F. Seleznev. *Method for selecting stars from Gaia EDR3 for statistical investigation of an open cluster.* Ural Federal University, 2022.
 
 ![ESCAPIST: the start page with the NGC 6124 example](docs/images/app_overview.png)
