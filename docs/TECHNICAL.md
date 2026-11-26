@@ -30,7 +30,7 @@ Members of an open cluster share an origin, so their parallaxes $\varpi$ and pro
 - an interval that is too wide keeps field stars, and large-scale fluctuations of the field density distort the statistics;
 - an interval that is too narrow cuts away cluster members because of astrometric errors.
 
-Members cannot be identified individually this way, so the cluster is studied statistically: the number of cluster stars is estimated as the star count inside the cluster circle minus the count in a background ring. The tool computes this number for a series of progressively narrower intervals. The intervals where the number is maximal and approximately constant (the plateau) are taken as optimal ([Mikhnevich & Seleznev, 2022](https://elar.urfu.ru/handle/10995/115949?locale=en)).
+Members cannot be identified individually this way, so the cluster is studied statistically: the number of cluster stars is estimated as the star count inside the cluster circle minus the count in a background ring. The tool computes this number for a series of progressively narrower intervals. The intervals where the number is maximal and approximately constant (the plateau) are taken as optimal.
 
 ## 2. Architecture overview
 
@@ -339,11 +339,11 @@ The hosting machine needs outbound HTTPS access to at least one of the data serv
 
 ## 14. References
 
-- V. O. Mikhnevich, A. F. Seleznev, *Method for selecting stars from Gaia EDR3 for statistical investigation of an open cluster*, Ural Federal University, 2022.
-- Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *The Gaia mission*, A&A 595 (2016).
-- Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *Gaia Data Release 2: Summary of the contents and survey properties*, A&A 616 (2018).
-- Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *Gaia Early Data Release 3: Summary of the contents and survey properties*, A&A 649 (2021).
-- Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *Gaia Data Release 3: Summary of the contents and survey properties*, A&A 674 (2023).
-- Dias W. S. et al., *Updated parameters of 1743 open clusters based on Gaia DR2*, MNRAS 504, 356 (2021), VizieR `J/MNRAS/504/356`.
-- Ochsenbein F., Bauer P., Marcout J., *The VizieR database of astronomical catalogues*, A&AS 143, 23 (2000).
-- Astropy Collaboration; Ginsburg A. et al., *astroquery: An Astronomical Web-querying Package in Python*, AJ 157, 98 (2019).
+- [V. O. Mikhnevich, A. F. Seleznev, *Method for selecting stars from Gaia EDR3 for statistical investigation of an open cluster*, Ural Federal University, 2022](https://elar.urfu.ru/handle/10995/115949?locale=en).
+- [Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *The Gaia mission*, A&A 595 (2016)](https://scixplorer.org/abs/2016A%26A...595A...1G/abstract).
+- [Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *Gaia Data Release 2: Summary of the contents and survey properties*, A&A 616 (2018)](https://scixplorer.org/abs/2018A%26A...616A...1G/abstract).
+- [Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *Gaia Early Data Release 3: Summary of the contents and survey properties*, A&A 649 (2021)](https://scixplorer.org/abs/2021A%26A...649A...1G/abstract).
+- [Gaia Collaboration, Brown A. G. A., Vallenari A. et al., *Gaia Data Release 3: Summary of the contents and survey properties*, A&A 674 (2023)](https://scixplorer.org/abs/2023A%26A...674A...1G/abstract).
+- [Dias W. S. et al., *Updated parameters of 1743 open clusters based on Gaia DR2*, MNRAS 504, 356 (2021), VizieR `J/MNRAS/504/356`](https://scixplorer.org/abs/2021MNRAS.504..356D/abstract).
+- [Ochsenbein F., Bauer P., Marcout J., *The VizieR database of astronomical catalogues*, A&AS 143, 23 (2000)](https://scixplorer.org/abs/2000A%26AS..143...23O/abstract).
+- [Astropy Collaboration; Ginsburg A. et al., *astroquery: An Astronomical Web-querying Package in Python*, AJ 157, 98 (2019)](https://scixplorer.org/abs/2019AJ....157...98G/abstract).
