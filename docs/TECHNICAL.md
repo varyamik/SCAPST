@@ -1,4 +1,4 @@
-# ESCAPIST — Technical Description
+# ESCAPIST --- Technical Description
 
 *Exploring Star Clusters: Astrometric Parameter Intervals Selection Tool* (formerly SCAPST). Public instance: <https://scapst.streamlit.app/>.
 
