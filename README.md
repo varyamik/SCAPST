@@ -64,7 +64,7 @@ The preset reproduces the setup of the paper (centre l = 340.73°, b = +5.98°, 
 
 | Input | Meaning |
 |---|---|
-| Cluster | Name and parameters from the [Dias et al. (2021)](https://scixplorer.org/abs/2021MNRAS.504..356D/abstract) catalogue, or the NGC 6124 example; Fixes the centre (l, b) |
+| Cluster | Name and parameters from the [Dias et al. (2021)](https://scixplorer.org/abs/2021MNRAS.504..356D/abstract) catalogue, or the NGC 6124 example; Fixes the center (l, b) |
 | min/max $\mu_\alpha$, $\mu_\delta$, $\varpi$ | Selection intervals (mas/yr, mas/yr, mas) |
 | Radius, arcmin | Cluster radius; The downloaded area is a box of $\pm 3$ radii around the center |
 | Magnitude Limit | Gaia G-band limit |
@@ -74,7 +74,7 @@ The preset reproduces the setup of the paper (centre l = 340.73°, b = +5.98°, 
 | Output | Meaning |
 |---|---|
 | $\mu_\alpha$, $\mu_\delta$, $\varpi$ (modes) | Most probable values from a 1-D kernel density estimate |
-| $V_\alpha$, $V_\delta$, distance | Tangential velocities (4.74$\cdot \mu$/$\varpi$, km/s) and distance (1000/$\varpi$, pc) |
+| $V_\alpha$, $V_\delta$, distance | Tangential velocities (4.74\cdot\mu/\varpi, km/s) and distance (1000/\mu, pc) |
 | Stars in the area / circle / ring | Counts after the interval selection |
 | Cluster stars, background-adjusted | Circle count minus ring count |
 | Iteration table and plot | One row per **Calculate**, used to find the plateau |
