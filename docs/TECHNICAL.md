@@ -30,7 +30,7 @@ Members of an open cluster share an origin, so their parallaxes $\varpi$ and pro
 - an interval that is too wide keeps field stars, and large-scale fluctuations of the field density distort the statistics;
 - an interval that is too narrow cuts away cluster members because of astrometric errors.
 
-Members cannot be identified individually this way, so the cluster is studied statistically: the number of cluster stars is estimated as the star count inside the cluster circle minus the count in a background ring. The tool computes this number for a series of progressively narrower intervals. The intervals where the number is maximal and approximately constant (the **plateau**) are taken as optimal ([Mikhnevich & Seleznev, 2022](https://elar.urfu.ru/handle/10995/115949?locale=en)).
+Members cannot be identified individually this way, so the cluster is studied statistically: the number of cluster stars is estimated as the star count inside the cluster circle minus the count in a background ring. The tool computes this number for a series of progressively narrower intervals. The intervals where the number is maximal and approximately constant (the plateau) are taken as optimal ([Mikhnevich & Seleznev, 2022](https://elar.urfu.ru/handle/10995/115949?locale=en)).
 
 ## 2. Architecture overview
 
@@ -64,7 +64,7 @@ flowchart TD
 |---|---|---|
 | `VIZIER_MIRRORS` | constant | List of VizieR mirror host names |
 | `get_fastest_vizier_mirror()` | function (`st.cache_resource`, TTL 1 h) | Sends a `HEAD` request to each mirror (timeout 1.5 s) and returns the fastest that answers; default `vizier.cfa.harvard.edu` |
-| `LinDens` | class | One-dimensional kernel density estimate on a regular grid (step 0.1), using a quartic kernel of half-width $delta=0.3$; the grid node with the highest density gives the most probable value of a parameter |
+| `LinDens` | class | One-dimensional kernel density estimate on a regular grid (step 0.1), using a quartic kernel of half-width (delta=0.3); the grid node with the highest density gives the most probable value of a parameter |
 | `findcentres()` | function | Runs `LinDens` for  $\mu_\alpha$, $\mu_\delta$ and $\varpi$ and returns the three density maxima |
 | `fetch_dias_clusters()` | function (`st.cache_data`) | Downloads the Dias et al. (2021) catalogue from VizieR |
 | `fetch_gaia_data_adql()` | function (`st.cache_data`) | Downloads the Gaia table for the selected area and intervals, with fallback servers |
