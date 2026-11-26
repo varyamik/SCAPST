@@ -18,7 +18,7 @@ This document describes how the application in `SCAPST.py` works: architecture, 
 10. [Constants and tunable parameters](#10-constants-and-tunable-parameters)
 11. [Dependencies and deployment](#11-dependencies-and-deployment)
 12. [Known limitations and open issues](#12-known-limitations-and-open-issues)
-13. [Differences from the 2022 desktop version](#13-differences-from-the-2022-desktop-version)
+13. [Comparison with the 2022 desktop version](#13-comparison-with-the-2022-desktop-version)
 14. [References](#14-references)
 
 ---
@@ -323,7 +323,7 @@ The hosting machine needs outbound HTTPS access to at least one of the data serv
 11. **History rows are not de-duplicated.** Pressing **Calculate** twice with identical inputs adds two identical rows.
 12. **Fallback servers** are not guaranteed to hold exactly the same data as the ESA archive (for example a mirror may lag behind, or apply its own row cap). Gaia DR4 will initially be available from the ESA archive only. Only DR2, EDR3 and DR3 are offered in the interface.
 
-## 13. Comparison the 2022 desktop version
+## 13. Comparison with the 2022 desktop version
 
 | Aspect | Desktop (paper, Tkinter) | Web version (this repository) |
 |---|---|---|
