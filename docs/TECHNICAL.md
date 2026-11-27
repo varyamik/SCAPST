@@ -241,7 +241,8 @@ i_{\min}=
         0,& r_k<h, \\ 
         \text{int}\Bigl((r_k-h)/\Delta\Bigr),& \text{otherwise,}
     \end{cases}
-\qquad
+$$
+$$
 i_{\max}=\text{min}\Bigl(\text{int}\Bigl((r_k+h)/\Delta\Bigr), n\Bigr),
 $$
 
@@ -255,7 +256,7 @@ The expression in the parentheses is taken as zero whenever it would be negative
 
 The estimated most probable value is the node with the highest density,
 
-$$\hat x=x_{i^{\*}},\qquad i^{\*}=\text{arg}\,max_{i}F_i,$$
+$$\hat x=x_{i^{\*}},\qquad i^{\*}=\text{arg} max_{i}F_i,$$
 
 and it is NaN if every $F_i$ is zero. Since $\hat x$ is a grid node, it is quantised to $\Delta=0.1$: the position of the peak is not interpolated between nodes.
 
