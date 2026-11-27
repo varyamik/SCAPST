@@ -211,7 +211,7 @@ Each star is replaced by a small bump of width $h$ centred on its value, and the
 The kernel is the quartic kernel
 
 $$
-K(u)=\begin{cases}\dfrac{15}{16}\,\bigl(1-u^{2}\bigr)^{2}, & |u|\le 1,\\[2mm] 0, & |u|>1,\end{cases}
+K(u)=\begin{cases}\dfrac{15}{16}\,\Bigl(1-u^{2}\Bigr)^{2}, & |u|\le 1,\\ 0, & |u|>1,\end{cases}
 \qquad u=\frac{x-x_k}{h}.
 $$
 
@@ -226,12 +226,12 @@ Properties used:
 For a parameter with interval $[x_{\min},x_{\max}]$ and step $\Delta$ ($=0.1$), the density is evaluated on the nodes
 
 $$
-x_i=x_{\min}+i\,\Delta,\qquad i=0,\dots,n-1,\qquad n=\max\!\Bigl(\Bigl\text{int}(\frac{x_{\max}-x_{\min}}{\Delta}\Bigr ),\,1\Bigr).
+x_i=x_{\min}+i\,\Delta,\qquad i=0,\dots,n-1,\qquad n=\max\Bigl(\text{int}\Bigl(\frac{x_{\max}-x_{\min}}{\Delta}\Bigr),\,1\Bigr).
 $$
 
 For a star with value $x_k$ and $r_k=x_k-x_{\min}$, only the nodes with indices $i_{\min}\le i<i_{\max}$ are updated, where
 
-$$i_{\min}=\begin{cases}0,& r_k<h,\\ \text{int}\bigl(r_k-h)/\Delta\bigr,& \text{otherwise,}\end{cases}
+$$i_{\min}=\begin{cases}0,& r_k<h,\\ \text{int}\Bigl((r_k-h)/\Delta\Bigr),& \text{otherwise,}\end{cases}
 \qquad
 i_{\max}=\text{min}\bigl(\text{int}\bigl(r_k+h)/\Delta\bigr, n\bigr),$$
 
