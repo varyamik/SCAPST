@@ -236,13 +236,13 @@ $$
 For a star with value $x_k$ and $r_k=x_k-x_{\min}$, only the nodes with indices $i_{\min}\le i<i_{\max}$ are updated, where
 
 $$
-    i_{\min}=
+i_{\min}=
     \begin{cases}
         0,& r_k<h, \\ 
         \text{int}\Bigl((r_k-h)/\Delta\Bigr),& \text{otherwise,}
     \end{cases}
 \qquad
-i_{\max}=\text{min}\bigl(\text{int}\bigl(r_k+h)/\Delta\bigr, n\bigr),
+i_{\max}=\text{min}\bigl(\text{int}\bigl((r_k+h)/\Delta\bigr), n\bigr),
 $$
 
 and each such node receives
@@ -261,8 +261,8 @@ and it is NaN if every $F_i$ is zero. Since $\hat x$ is a grid node, it is quant
 
 #### Implementation details that affect the result
 
-1. Asymmetric truncation. The upper node limit $\text{int}\bigl(r_k+h)/\Delta\bigr$ is used as an exclusive bound, so the last grid node that still lies inside the kernel support is skipped, while on the lower side the first node is included. The effective kernel is therefore slightly asymmetric.
-2. Grid end. The nodes stop at $x_{\min}+(n-1)\Delta$, so the top part of the interval (up to one step) has no node of its own.
+1. Asymmetric truncation. The upper node limit $\text{int}\bigl((r_k+h)/\Delta\bigr)$ is used as an exclusive bound, so the last grid node that still lies inside the kernel support is skipped, while on the lower side the first node is included. The effective kernel is therefore slightly asymmetric.
+2. Grid end. The nodes stop at $x_{\min}+(n-1)\cdot\Delta$, so the top part of the interval (up to one step) has no node of its own.
 3. Interval edges. The kernel is cut off at the grid ends and is not reflected. For intervals only a few $h$ wide, the density near the edges is underestimated and the maximum is biased towards the interior.
 4. Bandwidth. $h$ is fixed. A larger $h$ smooths more and gives a more stable but broader peak (more bias, less variance); a smaller $h$ follows the data more closely but is noisier.
 
