@@ -223,31 +223,31 @@ Properties used:
 
 For a parameter with interval $[x_{\min},x_{\max}]$ and step $\Delta$ ($=0.1$), the density is evaluated on the nodes
 
-$$x_i=x_{\min}+i\,\Delta,\qquad i=0,\dots,n-1,\qquad n=\max\!\Bigl(\operatorname{int}\Bigl(\frac{x_{\max}-x_{\min}}{\Delta}\Bigr),\,1\Bigr).$$
+$$x_i=x_{\min}+i\,\Delta,\qquad i=0,\dots,n-1,\qquad n=\max\!\Bigl(\int\Bigl(\frac{x_{\max}-x_{\min}}{\Delta}\Bigr),\,1\Bigr).$$
 
 For a star with value $x_k$ and $r_k=x_k-x_{\min}$, only the nodes with indices $i_{\min}\le i<i_{\max}$ are updated, where
 
-$$i_{\min}=\begin{cases}0,& r_k<\delta,\\ \operatorname{int}\bigl((r_k-\delta)/\Delta\bigr),& \text{otherwise,}\end{cases}
+$$i_{\min}=\begin{cases}0,& r_k<\delta,\\ \int\bigl((r_k-\delta)/\Delta\bigr),& \text{otherwise,}\end{cases}
 \qquad
-i_{\max}=\min\!\bigl(\operatorname{int}\bigl((r_k+\delta)/\Delta\bigr),\;n\bigr),$$
+i_{\max}=\min\!\bigl(\int\bigl((r_k+\delta)/\Delta\bigr),\;n\bigr),$$
 
 and each such node receives
 
 $$F_i \mathrel{+}= \frac{15}{16\,h}\,\Bigl[\,1-\Bigl(\frac{x_k-x_i}{h}\Bigr)^{2}\Bigr]^{2}.$$
 
-The expression in the parentheses is taken as zero whenever it would be negative, which happens for nodes lying farther than $h$ from the star. Such a node can occur at the lower end of the index range, because $i_{\min}$ is computed by rounding down; without this rule, squaring a negative value would add a false positive contribution. Here $\operatorname{int}$ is the integer part, as in the Python function `int`, which discards the fractional part; its arguments are never negative. Only stars with $G\le G_\mathrm{lim}$ contribute.
+The expression in the parentheses is taken as zero whenever it would be negative, which happens for nodes lying farther than $h$ from the star. Such a node can occur at the lower end of the index range, because $i_{\min}$ is computed by rounding down; without this rule, squaring a negative value would add a false positive contribution. Here $\int$ is the integer part, as in the Python function `int`, which discards the fractional part; its arguments are never negative. Only stars with $G\le G_\mathrm{lim}$ contribute.
 
 #### Result
 
 The estimated most probable value is the node with the highest density,
 
-$$\hat x=x_{i^{*}},\qquad i^{*}=\operatorname*{arg\,max}_{i}F_i,$$
+$$\hat x=x_{i^{*}},\qquad i^{*}=\text*{arg}\,max_{i}F_i,$$
 
 and it is NaN if every $F_i$ is zero. Since $\hat x$ is a grid node, it is quantised to $\Delta=0.1$: the position of the peak is not interpolated between nodes.
 
 #### Implementation details that affect the result
 
-1. Asymmetric truncation. The upper node limit $\operatorname{int}\bigl((r_k+h)/\Delta\bigr)$ is used as an exclusive bound, so the last grid node that still lies inside the kernel support is skipped, while on the lower side the first node is included. The effective kernel is therefore slightly asymmetric.
+1. Asymmetric truncation. The upper node limit $\int\bigl((r_k+h)/\Delta\bigr)$ is used as an exclusive bound, so the last grid node that still lies inside the kernel support is skipped, while on the lower side the first node is included. The effective kernel is therefore slightly asymmetric.
 2. Grid end. The nodes stop at $x_{\min}+(n-1)\Delta$, so the top part of the interval (up to one step) has no node of its own.
 3. Interval edges. The kernel is cut off at the grid ends and is not reflected. For intervals only a few $h$ wide, the density near the edges is underestimated and the maximum is biased towards the interior.
 4. Bandwidth. $h$ is fixed. A larger $h$ smooths more and gives a more stable but broader peak (more bias, less variance); a smaller $h$ follows the data more closely but is noisier.
@@ -284,9 +284,9 @@ $$
 and counts
  
 $$
-N_c=\#\{\rho\le R\},
+N_c=\\#\{\rho\le R\},
 \qquad
-N_r=\#\{R<\rho\le\sqrt2\,R\}.
+N_r=\\#\{R<\rho\le\sqrt2\,R\}.
 $$
  
 The circle has area $\pi R^2$. The ring has outer radius $\sqrt2\,R$, so its area is
