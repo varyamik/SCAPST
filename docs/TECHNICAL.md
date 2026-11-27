@@ -141,7 +141,7 @@ WHERE l  BETWEEN l0 - r_box AND l0 + r_box
 `fetch_gaia_data_adql` tries the servers in this order and stops at the first success:
 
 1. **ESA Gaia Archive**.
-2. **ARI Heidelberg**: first a `HEAD` request with a 10 s timeout checks that the server is reachable (otherwise a blocked connection would hang for about two minutes). The job is then submitted in the background and polled every 3 s; the progress bar shows the job phase and the time waited. The wait is limited by `ari_timeout_s` and the job is aborted on timeout.
+2. **ARI Heidelberg**: first a `HEAD` request with a 10 s timeout checks that the server is reachable (otherwise a blocked connection would hang for about two minutes). The job is then submitted in the background and polled every 3 s; the progress bar shows the job phase and the time waited. The wait is limited by `ari_timeout_s` (60 s) and the job is aborted on timeout.
 3. **VizieR** on the mirror chosen by `get_fastest_vizier_mirror()`. A cone search (`Vizier.query_region`) with radius `√2·r_box` is used, with the proper-motion, parallax and magnitude cuts passed as `column_filters`, a row limit equal to *Max Number of Sources*, and a timeout of 60 s.
 
 After a VizieR download the code :
@@ -292,7 +292,7 @@ Changing the cluster resets `calculated`, `results`, `calc_params`, `fig_r`, `ra
 | `√2` | circle/ring computation and plots | Outer ring radius in units of R |
 | `4.74` | velocity calculation | km/s per (mas/yr)/mas |
 | `1.5 · r_box` | ARI and VizieR queries | Cone radius that covers the box |
-| `ari_timeout_s` | `fetch_gaia_data_adql` | Maximum wait for the ARI job (s) |
+| `ari_timeout_s=60` | `fetch_gaia_data_adql` | Maximum wait for the ARI job (s) |
 | `10 s` | `fetch_gaia_data_adql` | ARI reachability check timeout |
 | `v.TIMEOUT = 600` | `fetch_gaia_data_adql` | VizieR request timeout (s) |
 | `timeout=1.5` | `get_fastest_vizier_mirror` | Mirror probe timeout (s) |
