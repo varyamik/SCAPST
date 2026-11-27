@@ -255,7 +255,7 @@ The expression in the parentheses is taken as zero whenever it would be negative
 
 The estimated most probable value is the node with the highest density,
 
-$$\hat x=x_{i^{\*}},\qquad i^{\*}=\text{arg} max_{i}F_i,$$
+$$\hat x=x_{i^{\*}},\qquad i^{\*}=\text{arg} \, max_{i}F_i,$$
 
 and it is NaN if every $F_i$ is zero. Since $\hat x$ is a grid node, it is quantised to $\Delta=0.1$: the position of the peak is not interpolated between nodes.
 
@@ -311,7 +311,7 @@ $$
  
 the same as the circle. This is why the outer radius is $\sqrt2\,R$.
  
-*Accuracy of $\rho$.* The exact angular separation follows from the spherical law of cosines, $\cos\theta=\sin b\sin b_0+\cos b\cos b_0\cos(l-l_0)$. For small separations it reduces to $\theta\simeq\sqrt{(\Delta l\cos b)^2+(\Delta b)^2}$. The app uses the simpler form without $\cos b$, which is accurate when $\cos b\approx1$: at $b=6^\circ$ (NGC 6124) the correction factor is $\cos b=0.995$, but it becomes $0.5$ at $b=60^\circ$. The l-difference is also not wrapped at $0^\circ/360^\circ$.
+*Accuracy of* $\rho$. The exact angular separation follows from the spherical law of cosines, $$\cos\theta=\sin b\sin b_0+\cos b\cos b_0\cos(l-l_0)$$. For small separations it reduces to $$\theta\simeq\sqrt{(\Delta l\cos b)^2+(\Delta b)^2}$$. The app uses the simpler form without $\cos b$, which is accurate when $\cos b\approx1$: at $b=6^\circ$ (NGC 6124) the correction factor is $\cos b=0.995$, but it becomes $0.5$ at $b=60^\circ$. The l-difference is also not wrapped at $0^\circ/360^\circ$.
  
 #### Estimator
  
