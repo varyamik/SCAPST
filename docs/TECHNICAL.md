@@ -242,7 +242,7 @@ i_{\min}=
         \text{int}\Bigl((r_k-h)/\Delta\Bigr),& \text{otherwise,}
     \end{cases}
 \qquad
-i_{\max}=\text{min}\bigl(\text{int}\bigl((r_k+h)/\Delta\bigr), n\bigr),
+i_{\max}=\text{min}\Bigl(\text{int}\Bigl((r_k+h)/\Delta\Bigr), n\Bigr),
 $$
 
 and each such node receives
