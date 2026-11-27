@@ -238,7 +238,8 @@ For a star with value $x_k$ and $r_k=x_k-x_{\min}$, only the nodes with indices 
 $$
 i_{\min}=
     \begin{cases}
-        0, & r_k<h, \\ \text{int}\Bigl((r_k-h)/\Delta\Bigr), & \text{otherwise,}
+        0, & r_k<h, \\\\
+        \text{int}\Bigl((r_k-h)/\Delta\Bigr), & \text{otherwise,}
     \end{cases}
 $$
 $$
