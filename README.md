@@ -3,6 +3,9 @@
 *(formerly SCAPST, "Star Cluster Astrometric Parameters Selection Tool")*
 
 **Live app: <https://scapst.streamlit.app/>** — open it in a browser, no installation needed.
+```diff
+- Currently unavailable because the Gaia archive is down. Waiting for DR4.
+```
 
 A web application for finding the **optimal astrometric intervals** (proper motion and parallax) for separating an open star cluster from the Galactic field, using Gaia data. It runs in the browser and is built with [Streamlit](https://streamlit.io).
 
