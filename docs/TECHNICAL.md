@@ -196,49 +196,132 @@ The intervals are closed. The number of rows of `df_sel` is the *Total number of
 
 ### 7.2 Most probable values: 1-D kernel density estimate
 
-`findcentres(inarr, maglim, delta, step, a, d, z)` receives an array of rows `(parallax, pmra, pmdec, G)` from `df_sel` and three ranges for $\mu_\alpha$, $\mu_\delta$ and $\varpi$. It builds three independent one-dimensional densities with the class `LinDens` and returns the position of each maximum.
+Within the selected interval, cluster members form a **peak** in the distribution of each of $\mu_\alpha$, $\mu_\delta$ and $\varpi$, on top of a broad, smooth distribution of field stars. The peak position is therefore a more robust estimate of the cluster's central value than the mean. To locate the peak without choosing histogram bins, the app computes a kernel density estimate (KDE) and takes its maximum. The three parameters are treated independently, each in one dimension.
 
-**Grid.** For a parameter with the range `[x_min, x_max]`, the grid nodes are `x_i = x_min + i·step`, `i = 0 … int((x_max − x_min)/step) − 1`, with `step = 0.1` (mas/yr for proper motion, mas for parallax).
+#### Kernel density estimate
 
-**Kernel.** Every star with `G ≤ `*Magnitude limit* and value `x` adds to the grid nodes within `±delta` of `x` the quartic kernel
+For $N$ values $x_1,\dots,x_N$ of one parameter (the stars of the selected interval with $G\le G_\mathrm{lim}$), a KDE with kernel $K$ and half-width (bandwidth) $h$ is
 
-```
-K(x_i; x) = 15/16 · [1 − ((x − x_i)/δ)²]² / δ      for |x − x_i| ≤ δ,  otherwise 0
-```
+$$\hat f(x)=\frac{1}{h}\sum_{k=1}^{N}K\!\left(\frac{x-x_k}{h}\right).$$
 
-with the half-width `δ = 0.3`. The kernel integrates to one, so the grid values are an estimate of the probability density.
+Each star is replaced by a small bump of width $h$ centred on its value, and the bumps are added. Unlike a histogram, the result does not depend on where the bin edges are placed. The app omits the usual factor $1/N$, so $\int\hat f\,dx=N$ (approximately, because of the edge truncation described below); this does not move the maximum.
 
-**Result.** The estimated mode is the node with the highest density, `x_mode = x_{argmax}`; it is `NaN` if the density is empty. Because the grid step is 0.1, **modes are quantised to 0.1** of the parameter unit.
+#### Kernel
 
-**Window logic.** `LinDens` supports an inner window for selecting which stars contribute (a star adds to the μα density only if its μδ lies in the μδ inner window, and vice versa; ϖ uses its own window). The app passes the interval limits as both outer and inner bounds (`[min, min, max, max]`). Since `df_sel` already lies inside the interval, the inner windows do not exclude anything: all selected stars with `G ≤ maglim` contribute to all three densities.
+The kernel is the quartic kernel
 
-**Derived quantities** (in `render_interface`):
+$$K(u)=\begin{cases}\dfrac{15}{16}\,\bigl(1-u^{2}\bigr)^{2}, & |u|\le 1,\\[2mm] 0, & |u|>1,\end{cases}
+\qquad u=\frac{x-x_k}{\delta}.$$
 
-```
-distance  d  = 1000 / ϖ_mode                [pc]
-V_α = 4.74 · μα_mode / ϖ_mode               [km/s]
-V_δ = 4.74 · μδ_mode / ϖ_mode               [km/s]
-```
+Properties used:
 
-If `ϖ_mode ≤ 0` or is `NaN`, the distance and velocities are set to 0. No parallax zero-point correction is applied.
+- $\int_{-1}^{1}K(u)\,du=1$, so each star contributes a unit of probability (the factor $15/16$ ensures this).
+- $K$ is symmetric, smooth, and exactly zero beyond $|u|=1$, so each star affects only grid nodes within $\pm h$.
+- Its variance is $\int u^{2}K(u)\,du=1/7$, so the kernel acts like a smoothing with standard deviation $\sigma_K=h/\sqrt7\approx0.38\,h$. For $h=0.3$ this is about $0.11$ (mas/yr for proper motion, mas for parallax).
 
-### 7.3 Number of cluster stars (circle minus ring)
+#### Grid and evaluation
 
-Distance of each selected star from the cluster centre (l₀, b₀), in degrees:
+For a parameter with interval $[x_{\min},x_{\max}]$ and step $\Delta$ ($=0.1$), the density is evaluated on the nodes
 
-```
-ρ = sqrt( (l − l₀)² + (b − b₀)² )
-```
+$$x_i=x_{\min}+i\,\Delta,\qquad i=0,\dots,n-1,\qquad n=\max\!\Bigl(\operatorname{int}\Bigl(\frac{x_{\max}-x_{\min}}{\Delta}\Bigr),\,1\Bigr).$$
 
-With `R_deg = R/60`:
+For a star with value $x_k$ and $r_k=x_k-x_{\min}$, only the nodes with indices $i_{\min}\le i<i_{\max}$ are updated, where
 
-```
-N_circle  = #{ ρ ≤ R_deg }
-N_ring    = #{ R_deg < ρ ≤ √2 · R_deg }
-N_cluster = max(0, N_circle − N_ring)
-```
+$$i_{\min}=\begin{cases}0,& r_k<\delta,\\ \operatorname{int}\bigl((r_k-\delta)/\Delta\bigr),& \text{otherwise,}\end{cases}
+\qquad
+i_{\max}=\min\!\bigl(\operatorname{int}\bigl((r_k+\delta)/\Delta\bigr),\;n\bigr),$$
 
-The ring has outer radius √2·R, so its area `π(2R² − R²) = πR²` equals the area of the circle. The estimate therefore assumes a **uniform distribution of field stars** and a **spherically symmetric cluster** that lies entirely inside the circle. The centre (l₀, b₀) is fixed (section 12).
+and each such node receives
+
+$$F_i \mathrel{+}= \frac{15}{16\,h}\,\Bigl[\,1-\Bigl(\frac{x_k-x_i}{h}\Bigr)^{2}\Bigr]^{2}.$$
+
+The expression in the parentheses is taken as zero whenever it would be negative, which happens for nodes lying farther than $h$ from the star. Such a node can occur at the lower end of the index range, because $i_{\min}$ is computed by rounding down; without this rule, squaring a negative value would add a false positive contribution. Here $\operatorname{int}$ is the integer part, as in the Python function `int`, which discards the fractional part; its arguments are never negative. Only stars with $G\le G_\mathrm{lim}$ contribute.
+
+#### Result
+
+The estimated most probable value is the node with the highest density,
+
+$$\hat x=x_{i^{*}},\qquad i^{*}=\operatorname*{arg\,max}_{i}F_i,$$
+
+and it is NaN if every $F_i$ is zero. Since $\hat x$ is a grid node, it is quantised to $\Delta=0.1$: the position of the peak is not interpolated between nodes.
+
+#### Implementation details that affect the result
+
+1. Asymmetric truncation. The upper node limit $\operatorname{int}\bigl((r_k+h)/\Delta\bigr)$ is used as an exclusive bound, so the last grid node that still lies inside the kernel support is skipped, while on the lower side the first node is included. The effective kernel is therefore slightly asymmetric.
+2. Grid end. The nodes stop at $x_{\min}+(n-1)\Delta$, so the top part of the interval (up to one step) has no node of its own.
+3. Interval edges. The kernel is cut off at the grid ends and is not reflected. For intervals only a few $h$ wide, the density near the edges is underestimated and the maximum is biased towards the interior.
+4. Bandwidth. $h$ is fixed. A larger $h$ smooths more and gives a more stable but broader peak (more bias, less variance); a smaller $h$ follows the data more closely but is noisier.
+
+#### Derived quantities
+
+From the modes $\hat\mu_\alpha$, $\hat\mu_\delta$, $\hat\varpi$ (in mas/yr, mas/yr, mas), the app computes
+
+$$d=\frac{1000}{\hat\varpi}\ \text{pc},
+\qquad
+V_\alpha=k\,\frac{\hat\mu_\alpha}{\hat\varpi},
+\qquad
+V_\delta=k\,\frac{\hat\mu_\delta}{\hat\varpi},
+\qquad k=4.74\ \text{km s}^{-1}\,\frac{\text{mas/yr}}{\text{mas}}.$$
+
+- The distance relation is $d\,[\mathrm{pc}]=1/\varpi\,[\mathrm{arcsec}]$; with $\varpi$ in mas this gives the factor 1000.
+- The tangential velocity is $v_t=4.74\,\mu\,d\,[\mathrm{km/s}]$ with $\mu$ in arcsec/yr and $d$ in pc; substituting $d=1/\varpi$ gives the expression above.
+- Gaia's `pmra` already includes the factor $\cos\delta$ ($\mu_{\alpha*}=\mu_\alpha\cos\delta$), so $V_\alpha$ is a true velocity on the sky.
+- If $\hat\varpi\le0$ or is NaN, the distance and velocities are set to 0.
+- No parallax zero-point correction is applied, and inverting a single parallax value is a reasonable distance estimate only when the parallax error is small compared with the parallax. 
+
+### 7.3 Number of cluster stars
+
+Even after the astrometric cut, some field stars remain in the area, so the number of stars inside the cluster circle overestimates the number of members. The contamination is estimated from a **comparison region** around the cluster, and subtracted.
+
+#### Geometry
+ 
+Let $(l_0,b_0)$ be the cluster centre and $R=R_\mathrm{arcmin}/60$ the radius in degrees. The app measures the distance of a star from the centre as
+ 
+$$
+\rho=\sqrt{(l-l_0)^2+(b-b_0)^2},
+$$
+ 
+and counts
+ 
+$$
+N_c=\#\{\rho\le R\},
+\qquad
+N_r=\#\{R<\rho\le\sqrt2\,R\}.
+$$
+ 
+The circle has area $\pi R^2$. The ring has outer radius $\sqrt2\,R$, so its area is
+ 
+$$
+\pi\bigl((\sqrt2R)^2-R^2\bigr)=\pi R^2,
+$$
+ 
+the same as the circle. This is why the outer radius is $\sqrt2\,R$.
+ 
+*Accuracy of $\rho$.* The exact angular separation follows from the spherical law of cosines, $\cos\theta=\sin b\sin b_0+\cos b\cos b_0\cos(l-l_0)$. For small separations it reduces to $\theta\simeq\sqrt{(\Delta l\cos b)^2+(\Delta b)^2}$. The app uses the simpler form without $\cos b$, which is accurate when $\cos b\approx1$: at $b=6^\circ$ (NGC 6124) the correction factor is $\cos b=0.995$, but it becomes $0.5$ at $b=60^\circ$. The l-difference is also not wrapped at $0^\circ/360^\circ$.
+ 
+#### Estimator
+ 
+$$
+\hat N_\mathrm{cl}=\max\bigl(0,\;N_c-N_r\bigr).
+$$
+ 
+Assume the field stars have a **uniform surface density** $\Sigma_f$ and that all cluster members lie inside the circle. Then, on average,
+ 
+$$
+\langle N_c\rangle=N_\mathrm{cl}+\Sigma_f\,\pi R^2,
+\qquad
+\langle N_r\rangle=\Sigma_f\,\pi R^2,
+\qquad
+so \langle N_c-N_r\rangle=N_\mathrm{cl}
+$$
+
+Together with the requirements of a **spherically symmetric** cluster and a stable center, these are the assumptions the method rests on.
+ 
+#### Systematic effects
+ 
+- **Density gradients.** If the field density varies linearly across the region, the effect cancels to first order, because the circle and the ring are both symmetric about the same centre. Curvature (second-order) variations, such as the ones from interstellar extinction near the Galactic plane, do not cancel and bias $\hat N_\mathrm{cl}$.
+- **Cluster halo.** Members outside the circle fall into the ring and are subtracted as if they were field stars, which lowers $\hat N_\mathrm{cl}$. The estimate therefore depends on the choice of $R$.
+- **Centre.** The centre is fixed (section 12, item 1); an offset center moves members from the circle to the ring.
 
 ### 7.4 Iteration history and plateau search
 
@@ -256,14 +339,16 @@ The right-hand panel shows this table, with an optional sort by width (wide to n
 
 For the NGC 6124 example, the table is preloaded with Table 1 of the paper (12 samples, without the mode columns). It is created once per session unless **Reset** was used.
 
-## 8. Visualisation
+## 8. Visualization
 
-`plot_cluster_diagrams(df_sel, df, radius_am, l_med, b_med)` returns two Matplotlib figures (transparent background, 300 dpi):
+`plot_cluster_diagrams(df_sel, df, radius_am, l_med, b_med)` returns two Matplotlib figures:
 
 - **Figure 1**, two panels:
   - colour–magnitude diagram: `bp_rp` on the x axis, `phot_g_mean_mag` on the y axis, y axis inverted;
   - sky map in (l, b) of the selected stars, with two circles, the cluster circle (radius R) and the ring boundary (radius √2·R), drawn in degrees centred on (l₀, b₀).
 - **Figure 2**, three panels: `pmra`, `pmdec` and `parallax` against `phot_g_mean_mag`.
+
+"Number of stars vs. Iteration" figure is plotted separately in `ClusterAppUI` class. 
 
 ## 9. Session state
 
@@ -286,7 +371,7 @@ Changing the cluster resets `calculated`, `results`, `calc_params`, `fig_r`, `ra
 
 | Value | Where | Meaning |
 |---|---|---|
-| `delta = 0.3` | call to `findcentres` | Kernel half-width |
+| `delta = 0.3` | call to `findcentres` | Kernel half-width $h$ |
 | `step = 0.1` | call to `findcentres` | Density grid step |
 | `3 · R / 60` | `fetch_gaia_data_adql` | Half-width of the downloaded box (deg) |
 | `√2` | circle/ring computation and plots | Outer ring radius in units of R |
@@ -312,7 +397,7 @@ The hosting machine needs outbound HTTPS access to at least one of the data serv
 
 ## 12. Known limitations and open issues
 
-1. **Cluster centre is not estimated.** The centre comes from the Dias catalogue (RA/Dec converted to l, b) or, for the NGC 6124 example, from fixed values (l = 340.73°, b = +5.98°). The interface has no input for the centre.
+1. **Cluster center is not estimated.** The center comes from the Dias catalogue (RA/Dec converted to l, b) or, for the NGC 6124 example, from fixed values (l = 340.73°, b = +5.98°). The interface has no input for the center.
 3. **Flat angular distances.** Distances in section 7.3 are Euclidean in (l, b) degrees, without the `cos b` factor for l and without the wrap at l = 0°/360°. This is a good approximation near the Galactic plane and for small radii, and degrades at high |b| or near l = 0°. (The VizieR fallback does handle the l wrap when cutting the box.)
 4. **Silent truncation.** If the number of returned rows equals *Max Number of Sources*, the sample is incomplete, with no warning and no `ORDER BY`. The cluster count is then unreliable.
 5. **Row-limit change does not refresh the table** (section 6).
