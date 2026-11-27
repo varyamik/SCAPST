@@ -235,13 +235,7 @@ $$
 
 For a star with value $x_k$ and $r_k=x_k-x_{\min}$, only the nodes with indices $i_{\min}\le i<i_{\max}$ are updated, where
 
-$$
-i_{\min}=
-    \begin{cases}
-        0, & r_k<h, \cr
-        \text{int}\Bigl((r_k-h)/\Delta\Bigr), & \text{otherwise,}
-    \end{cases}
-$$
+$$i_{\min}=\begin{cases} 0, & r_k<h, \\ \text{int}\Bigl((r_k-h)/\Delta\Bigr), & \text{otherwise,}\end{cases}$$
 
 $$
 i_{\max}=\text{min}\Bigl(\text{int}\Bigl((r_k+h)/\Delta\Bigr), n\Bigr),
