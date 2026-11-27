@@ -13,7 +13,7 @@ This document describes how the application in `SCAPST.py` works: architecture, 
 5. [Gaia data retrieval](#5-gaia-data-retrieval)
 6. [Caching and re-query logic](#6-caching-and-re-query-logic)
 7. [Algorithms](#7-algorithms)
-8. [Visualisation](#8-visualisation)
+8. [Visualization](#8-visualization)
 9. [Session state](#9-session-state)
 10. [Constants and tunable parameters](#10-constants-and-tunable-parameters)
 11. [Dependencies and deployment](#11-dependencies-and-deployment)
