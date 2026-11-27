@@ -272,13 +272,13 @@ From the modes $\hat\mu_\alpha$, $\hat\mu_\delta$, $\hat\varpi$ (in mas/yr, mas/
 
 $$d=\frac{1000}{\hat\varpi}\ \text{pc},
 \qquad
-V_\alpha=k\,\frac{\hat\mu_\alpha}{\hat\varpi},
+V_\alpha=k\\,\frac{\hat\mu_\alpha}{\hat\varpi},
 \qquad
-V_\delta=k\,\frac{\hat\mu_\delta}{\hat\varpi},
-\qquad k=4.74\ \text{km s}^{-1}\,\frac{\text{mas/yr}}{\text{mas}}.$$
+V_\delta=k\\,\frac{\hat\mu_\delta}{\hat\varpi},
+\qquad k=4.74\ \text{km s}^{-1}\\,\frac{\text{mas/yr}}{\text{mas}}.$$
 
-- The distance relation is $d\,[\mathrm{pc}]=1/\varpi\,[\mathrm{arcsec}]$; with $\varpi$ in mas this gives the factor 1000.
-- The tangential velocity is $v_t=4.74\,\mu\,d\,[\mathrm{km/s}]$ with $\mu$ in arcsec/yr and $d$ in pc; substituting $d=1/\varpi$ gives the expression above.
+- The distance relation is $d\\,[\mathrm{pc}]=1/\varpi\\,[\mathrm{arcsec}]$; with $\varpi$ in mas this gives the factor 1000.
+- The tangential velocity is $v_t=4.74\\,\mu\\,d\\,[\mathrm{km/s}]$ with $\mu$ in arcsec/yr and $d$ in pc; substituting $d=1/\varpi$ gives the expression above.
 - Gaia's `pmra` already includes the factor $\cos\delta$ ($\mu_{\alpha*}=\mu_\alpha\cos\delta$), so $V_\alpha$ is a true velocity on the sky.
 - If $\hat\varpi\le0$ or is NaN, the distance and velocities are set to 0.
 - No parallax zero-point correction is applied, and inverting a single parallax value is a reasonable distance estimate only when the parallax error is small compared with the parallax. 
@@ -298,37 +298,41 @@ $$
 and counts
  
 $$
-N_c=\\#\{\rho\le R\},
+N_c=\\#\\{\rho\le R\\},
 \qquad
-N_r=\\#\{R<\rho\le\sqrt2\,R\}.
+N_r=\\#\\{R<\rho\le\sqrt2\\,R\\}.
 $$
  
-The circle has area $\pi R^2$. The ring has outer radius $\sqrt2\,R$, so its area is
+The circle has area $\pi R^2$. The ring has outer radius $\sqrt2\\,R$, so its area is
  
 $$
 \pi\bigl((\sqrt2R)^2-R^2\bigr)=\pi R^2,
 $$
  
-the same as the circle. This is why the outer radius is $\sqrt2\,R$.
+the same as the circle. This is why the outer radius is $\sqrt2\\,R$.
  
 *Accuracy of* $\rho$. The exact angular separation follows from the spherical law of cosines, 
-$$\cos\theta=\sin b\sin b_0+\cos b\cos b_0\cos(l-l_0).$$ 
+
+$$\cos\theta=\sin b \\, \sin b_0+\cos b \\, \cos b_0 \\, \cos(l-l_0).$$ 
+
 For small separations it reduces to 
-$$\theta\simeq\sqrt{(\Delta l\cos b)^2+(\Delta b)^2}.$$ 
+
+$$\theta \simeq \sqrt{(\Delta l \\, \cos b)^2+(\Delta b)^2}.$$ 
+
 The app uses the simpler form without $\cos b$, which is accurate when $\cos b\approx1$: at $b=6^\circ$ (NGC 6124) the correction factor is $\cos b=0.995$, but it becomes $0.5$ at $b=60^\circ$. The l-difference is also not wrapped at $0^\circ/360^\circ$.
  
 #### Estimator
  
 $$
-\hat N_\mathrm{cl}=\max\bigl(0,\;N_c-N_r\bigr).
+\hat N_\mathrm{cl}=\max\bigl(0, \\; N_c-N_r\bigr).
 $$
  
 Assume the field stars have a **uniform surface density** $\Sigma_f$ and that all cluster members lie inside the circle. Then, on average,
  
 $$
-\langle N_c\rangle=N_\mathrm{cl}+\Sigma_f\,\pi R^2,
+\langle N_c\rangle=N_\mathrm{cl}+\Sigma_f \\, \pi R^2,
 \qquad
-\langle N_r\rangle=\Sigma_f\,\pi R^2,
+\langle N_r\rangle=\Sigma_f \\, \pi R^2,
 \qquad
 so \langle N_c-N_r\rangle=N_\mathrm{cl}
 $$
