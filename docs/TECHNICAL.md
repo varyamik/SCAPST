@@ -241,9 +241,7 @@ i_{\min} =
         0, & r_k \lt h, \\
         \text{int}\Bigl((r_k - h)/\Delta\Bigr), & \text{otherwise,}
     \end{cases}
-$$
-
-$$
+\qquad
 i_{\max}=\text{min}\Bigl(\text{int}\Bigl((r_k+h)/\Delta\Bigr), n\Bigr),
 $$
 
