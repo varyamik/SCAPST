@@ -210,10 +210,14 @@ Each star is replaced by a small bump of width $h$ centred on its value, and the
 
 The kernel is the quartic kernel
 
-$$
-K(u)=\begin{cases}\dfrac{15}{16}\,\Bigl(1-u^{2}\Bigr)^{2}, & |u|\le 1,\\ 0, & |u|>1,\end{cases}
-\qquad u=\frac{x-x_k}{h}.
-$$
+\begin{equation}
+    K(u)=
+    \begin{cases}
+        \dfrac{15}{16}\,\bigl(1-u^{2}\bigr)^{2}, & |u|\le 1, \\ 
+        0, & |u|>1,
+    \end{cases}
+    \qquad u=\frac{x-x_k}{h}.
+\end{equation}
 
 Properties used:
 
@@ -231,9 +235,15 @@ $$
 
 For a star with value $x_k$ and $r_k=x_k-x_{\min}$, only the nodes with indices $i_{\min}\le i<i_{\max}$ are updated, where
 
-$$i_{\min}=\begin{cases}0,& r_k<h,\\ \text{int}\Bigl((r_k-h)/\Delta\Bigr),& \text{otherwise,}\end{cases}
+\begin{equation}
+    i_{\min}=
+    \begin{cases}
+        0,& r_k<h, \\ 
+        \text{int}\Bigl((r_k-h)/\Delta\Bigr),& \text{otherwise,}
+    \end{cases}
 \qquad
-i_{\max}=\text{min}\bigl(\text{int}\bigl(r_k+h)/\Delta\bigr, n\bigr),$$
+i_{\max}=\text{min}\bigl(\text{int}\bigl(r_k+h)/\Delta\bigr, n\bigr),
+\end{equation}
 
 and each such node receives
 
