@@ -210,14 +210,14 @@ Each star is replaced by a small bump of width $h$ centred on its value, and the
 
 The kernel is the quartic kernel
 
-\begin{equation}
-    K(u)=
+$$
+K(u)=
     \begin{cases}
-        \dfrac{15}{16}\,\bigl(1-u^{2}\bigr)^{2}, & |u|\le 1, \\ 
+        \dfrac{15}{16}\bigl(1-u^{2}\bigr)^{2}, & |u|\le 1, \\
         0, & |u|>1,
     \end{cases}
     \qquad u=\frac{x-x_k}{h}.
-\end{equation}
+$$
 
 Properties used:
 
@@ -230,12 +230,12 @@ Properties used:
 For a parameter with interval $[x_{\min},x_{\max}]$ and step $\Delta$ ($=0.1$), the density is evaluated on the nodes
 
 $$
-x_i=x_{\min}+i\,\Delta,\qquad i=0,\dots,n-1,\qquad n=\max\Bigl(\text{int}\Bigl(\frac{x_{\max}-x_{\min}}{\Delta}\Bigr),\,1\Bigr).
+x_i=x_{\min}+i\Delta,\qquad i=0,\dots,n-1,\qquad n=\max\Bigl(\text{int}\Bigl(\frac{x_{\max}-x_{\min}}{\Delta}\Bigr),1\Bigr).
 $$
 
 For a star with value $x_k$ and $r_k=x_k-x_{\min}$, only the nodes with indices $i_{\min}\le i<i_{\max}$ are updated, where
 
-\begin{equation}
+$$
     i_{\min}=
     \begin{cases}
         0,& r_k<h, \\ 
@@ -243,11 +243,11 @@ For a star with value $x_k$ and $r_k=x_k-x_{\min}$, only the nodes with indices 
     \end{cases}
 \qquad
 i_{\max}=\text{min}\bigl(\text{int}\bigl(r_k+h)/\Delta\bigr, n\bigr),
-\end{equation}
+$$
 
 and each such node receives
 
-$$F_i \mathrel{+}= \frac{15}{16\,h}\,\Bigl[\,1-\Bigl(\frac{x_k-x_i}{h}\Bigr)^{2}\Bigr]^{2}.$$
+$$F_i \mathrel{+}= \frac{15}{16h}\Bigl(1-\Bigl(\frac{x_k-x_i}{h}\Bigr)^{2}\Bigr)^{2}.$$
 
 The expression in the parentheses is taken as zero whenever it would be negative, which happens for nodes lying farther than $h$ from the star. Such a node can occur at the lower end of the index range, because $i_{\min}$ is computed by rounding down; without this rule, squaring a negative value would add a false positive contribution. Here $\text{int}$ is the integer part, as in the Python function `int`, which discards the fractional part; its arguments are never negative. Only stars with $G\le G_\mathrm{lim}$ contribute.
 
@@ -255,7 +255,7 @@ The expression in the parentheses is taken as zero whenever it would be negative
 
 The estimated most probable value is the node with the highest density,
 
-$$\hat x=x_{i^{*}},\qquad i^{*}=\text{arg}\,max_{i}F_i,$$
+$$\hat x=x_{i^{\*}},\qquad i^{\*}=\text{arg}\,max_{i}F_i,$$
 
 and it is NaN if every $F_i$ is zero. Since $\hat x$ is a grid node, it is quantised to $\Delta=0.1$: the position of the peak is not interpolated between nodes.
 
