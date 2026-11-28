@@ -370,7 +370,7 @@ For the NGC 6124 example, the table is preloaded with Table 1 of the paper (12 s
   - sky map in (l, b) of the selected stars, with two circles, the cluster circle (radius R) and the ring boundary (radius √2·R), drawn in degrees centred on (l₀, b₀).
 - **Figure 2**, three panels: `pmra`, `pmdec` and `parallax` against `phot_g_mean_mag`.
 
-"Number of stars vs. Iteration" figure is plotted separately in `ClusterAppUI` class. 
+**Figure 3**, in the right-hand panel (built in `render_interface`, not in `plot_cluster_diagrams`): *Cluster Star Count vs. Iteration*. Big black dots show the cluster star count of each iteration against the iteration number, with no connecting line and no fit; the grid is dashed. If *Sort by Interval Width* is on, the points are ordered from the widest to the narrowest intervals and renumbered. For the NGC 6124 example only, a shaded band over iterations 4-9 labelled "optimal intervals" is added. Before the first calculation, an information message is shown instead. 
 
 ## 9. Session state
 
